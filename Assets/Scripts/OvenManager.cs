@@ -7,18 +7,30 @@ using UnityEngine.SceneManagement;
 public class OvenManager : MonoBehaviour
 {
     public RectTransform sourcePizzaBase;
+    public RectTransform preparedPizzaDragContainer;
     public RectTransform ovenPizzaContainer;
+
+    public PreparedPizzaDragger preparedPizzaDragger;
+    public IngredientManager ingredientManager;
+    public DoughManager doughManager;
 
     public Slider bakeProgressBar;
     public TMP_Text bakeStateText;
+
+    public AudioSource ovenLoopSource;
+    public AudioClip ovenLoopClip;
+    public AudioClip pizzaReadyClip;
+    public AudioClip trashClip;
+
+    public float ovenLoopVolume = 0.07f;
+    public float sfxVolumeMultiplier = 2f;
 
     public float mediumTime = 5f;
     public float wellDoneTime = 10f;
     public float burntTime = 15f;
 
-    public Vector2 ovenPizzaSize = new Vector2(300f, 300f);
-
-    public float pizzaChildrenScaleMultiplier = 2.2f;
+    public Vector2 preparedPizzaSize = new Vector2(300f, 300f);
+    public Vector2 ovenPizzaSize = new Vector2(420f, 420f);
 
     public Color rawTint = Color.white;
     public Color mediumTint = new Color(1f, 0.9f, 0.65f, 1f);
@@ -34,13 +46,23 @@ public class OvenManager : MonoBehaviour
     private string currentBakeState = "Cruda";
 
     private GameObject ovenPizzaClone;
+    private GameObject preparedPizzaClone;
 
     private List<Image> clonedPizzaImages =
         new List<Image>();
 
     void Start()
     {
+        if (ovenLoopSource != null)
+        {
+            ovenLoopSource.playOnAwake = false;
+            ovenLoopSource.loop = true;
+            ovenLoopSource.volume = ovenLoopVolume;
+            ovenLoopSource.spatialBlend = 0f;
+        }
+
         ResetOven();
+        BuildPreparedPizzaPreview();
     }
 
     void Update()
@@ -48,16 +70,49 @@ public class OvenManager : MonoBehaviour
         if (!isBaking)
             return;
 
-        bakeTimer =
-            Time.time - bakingStartTime;
+        bakeTimer = Time.time - bakingStartTime;
 
         if (bakeProgressBar != null)
-        {
-            bakeProgressBar.value =
-                bakeTimer;
-        }
+            bakeProgressBar.value = bakeTimer;
 
         UpdateBakeState();
+    }
+
+    public void BuildPreparedPizzaPreview()
+    {
+        if (pizzaInserted)
+            return;
+
+        if (!PizzaRuntimeData.doughReady || PizzaRuntimeData.pizzaInOven)
+        {
+            ClearPreparedPizzaPreview();
+            return;
+        }
+
+        if (sourcePizzaBase == null || preparedPizzaDragContainer == null)
+            return;
+
+        ClearPreparedPizzaPreview();
+
+        preparedPizzaClone =
+            Instantiate(
+                sourcePizzaBase.gameObject,
+                preparedPizzaDragContainer,
+                false
+            );
+
+        preparedPizzaClone.name = "PizzaRealeDaTrascinare";
+        preparedPizzaClone.SetActive(true);
+
+        SetupPizzaClone(
+            preparedPizzaClone,
+            preparedPizzaSize
+        );
+
+        DisableRaycasts(preparedPizzaClone);
+
+        if (preparedPizzaDragger != null)
+            preparedPizzaDragger.ResetDrag();
     }
 
     public void InsertPizza()
@@ -65,16 +120,20 @@ public class OvenManager : MonoBehaviour
         if (pizzaInserted)
             return;
 
-        if (sourcePizzaBase == null ||
-            ovenPizzaContainer == null)
+        if (!PizzaRuntimeData.doughReady)
+            return;
+
+        if (sourcePizzaBase == null || ovenPizzaContainer == null)
             return;
 
         pizzaInserted = true;
         isBaking = true;
 
+        PizzaRuntimeData.pizzaInOven = true;
+        PizzaRuntimeData.pizzaReady = false;
+
         bakeTimer = 0f;
         bakingStartTime = Time.time;
-
         currentBakeState = "Cruda";
 
         ClearOvenPizza();
@@ -86,42 +145,28 @@ public class OvenManager : MonoBehaviour
                 false
             );
 
-        ovenPizzaClone.name =
-            "PizzaRealeInForno";
+        ovenPizzaClone.name = "PizzaRealeInForno";
+        ovenPizzaClone.SetActive(true);
 
-        RectTransform cloneRect =
-            ovenPizzaClone.GetComponent<RectTransform>();
-
-        cloneRect.anchorMin =
-            new Vector2(0.5f, 0.5f);
-
-        cloneRect.anchorMax =
-            new Vector2(0.5f, 0.5f);
-
-        cloneRect.pivot =
-            new Vector2(0.5f, 0.5f);
-
-        cloneRect.anchoredPosition =
-            Vector2.zero;
-
-        cloneRect.sizeDelta =
-            ovenPizzaSize;
-
-        cloneRect.localScale =
-            Vector3.one;
-
-        ScalePizzaChildren(
-            ovenPizzaClone.transform,
-            pizzaChildrenScaleMultiplier
+        SetupPizzaClone(
+            ovenPizzaClone,
+            ovenPizzaSize
         );
 
-        DisableRaycasts(
-            ovenPizzaClone
-        );
-
+        DisableRaycasts(ovenPizzaClone);
         CachePizzaImages();
-
         ApplyTint(rawTint);
+
+        ClearPreparedPizzaPreview();
+
+        if (preparedPizzaDragger != null)
+            preparedPizzaDragger.DisableDrag();
+
+        if (ingredientManager != null)
+            ingredientManager.HidePizzaAfterOvenInsert();
+
+        if (doughManager != null)
+            doughManager.ResetDoughForNewPizza();
 
         if (bakeProgressBar != null)
         {
@@ -129,53 +174,55 @@ public class OvenManager : MonoBehaviour
             bakeProgressBar.maxValue = burntTime;
         }
 
+        StartOvenLoop();
         UpdateOvenText();
+    }
+
+    void SetupPizzaClone(GameObject pizzaClone, Vector2 targetSize)
+    {
+        RectTransform cloneRect =
+            pizzaClone.GetComponent<RectTransform>();
+
+        Vector2 originalSize = sourcePizzaBase.rect.size;
+
+        if (originalSize.x <= 0f || originalSize.y <= 0f)
+            originalSize = sourcePizzaBase.sizeDelta;
+
+        if (originalSize.x <= 0f || originalSize.y <= 0f)
+            originalSize = new Vector2(300f, 300f);
+
+        cloneRect.anchorMin = new Vector2(0.5f, 0.5f);
+        cloneRect.anchorMax = new Vector2(0.5f, 0.5f);
+        cloneRect.pivot = new Vector2(0.5f, 0.5f);
+
+        cloneRect.anchoredPosition = Vector2.zero;
+        cloneRect.sizeDelta = originalSize;
+
+        float scaleX = targetSize.x / originalSize.x;
+        float scaleY = targetSize.y / originalSize.y;
+
+        cloneRect.localScale =
+            new Vector3(scaleX, scaleY, 1f);
     }
 
     void UpdateBakeState()
     {
         if (bakeTimer < mediumTime)
-        {
-            SetBakeState(
-                "Cruda",
-                rawTint
-            );
-        }
+            SetBakeState("Cruda", rawTint);
         else if (bakeTimer < wellDoneTime)
-        {
-            SetBakeState(
-                "Cottura media",
-                mediumTint
-            );
-        }
+            SetBakeState("Cottura media", mediumTint);
         else if (bakeTimer < burntTime)
-        {
-            SetBakeState(
-                "Ben cotta",
-                wellDoneTint
-            );
-        }
+            SetBakeState("Ben cotta", wellDoneTint);
         else
-        {
-            SetBakeState(
-                "Bruciata",
-                burntTint
-            );
-        }
+            SetBakeState("Bruciata", burntTint);
     }
 
-    void SetBakeState(
-        string state,
-        Color tint
-    )
+    void SetBakeState(string state, Color tint)
     {
         currentBakeState = state;
-
-        PizzaRuntimeData.bakeState =
-            state;
+        PizzaRuntimeData.bakeState = state;
 
         ApplyTint(tint);
-
         UpdateOvenText();
     }
 
@@ -184,10 +231,7 @@ public class OvenManager : MonoBehaviour
         for (int i = 0; i < clonedPizzaImages.Count; i++)
         {
             if (clonedPizzaImages[i] != null)
-            {
-                clonedPizzaImages[i].color =
-                    tint;
-            }
+                clonedPizzaImages[i].color = tint;
         }
     }
 
@@ -202,30 +246,7 @@ public class OvenManager : MonoBehaviour
             ovenPizzaClone.GetComponentsInChildren<Image>(true);
 
         for (int i = 0; i < images.Length; i++)
-        {
             clonedPizzaImages.Add(images[i]);
-        }
-    }
-
-    void ScalePizzaChildren(
-        Transform parent,
-        float multiplier
-    )
-    {
-        RectTransform parentRect =
-            parent.GetComponent<RectTransform>();
-
-        RectTransform[] children =
-            parent.GetComponentsInChildren<RectTransform>(true);
-
-        foreach (RectTransform child in children)
-        {
-            if (child == parentRect)
-                continue;
-
-            child.sizeDelta *= multiplier;
-            child.anchoredPosition *= multiplier;
-        }
     }
 
     void DisableRaycasts(GameObject target)
@@ -234,9 +255,7 @@ public class OvenManager : MonoBehaviour
             target.GetComponentsInChildren<Graphic>(true);
 
         for (int i = 0; i < graphics.Length; i++)
-        {
             graphics[i].raycastTarget = false;
-        }
     }
 
     void UpdateOvenText()
@@ -244,8 +263,7 @@ public class OvenManager : MonoBehaviour
         if (bakeStateText == null)
             return;
 
-        string text =
-            "Pizza in forno\n\n";
+        string text = "Pizza in forno\n\n";
 
         text +=
             "Cottura: "
@@ -264,12 +282,10 @@ public class OvenManager : MonoBehaviour
         if (PizzaRuntimeData.hasCipolla)
             text += "• Cipolla\n";
 
-        if (
-            !PizzaRuntimeData.hasSugo &&
+        if (!PizzaRuntimeData.hasSugo &&
             !PizzaRuntimeData.hasMozzarella &&
             !PizzaRuntimeData.hasTonno &&
-            !PizzaRuntimeData.hasCipolla
-        )
+            !PizzaRuntimeData.hasCipolla)
         {
             text += "• Solo impasto";
         }
@@ -282,21 +298,33 @@ public class OvenManager : MonoBehaviour
         if (!pizzaInserted)
             return;
 
+        StopOvenLoop();
+        PlaySFX(pizzaReadyClip);
+
         if (currentBakeState == "Bruciata")
         {
             if (bakeStateText != null)
-            {
                 bakeStateText.text =
                     "Pizza bruciata!\nButtala nel cestino.";
-            }
 
             return;
         }
 
         isBaking = false;
 
-        PizzaRuntimeData.bakeState =
-            currentBakeState;
+        PizzaRuntimeData.bakeState = currentBakeState;
+        PizzaRuntimeData.pizzaReady = true;
+        PizzaRuntimeData.pizzaInOven = false;
+
+        RestaurantManager restaurantManager =
+            FindAnyObjectByType<RestaurantManager>();
+
+        if (restaurantManager != null && ovenPizzaClone != null)
+        {
+            restaurantManager.ReceiveReadyPizzaVisual(
+                ovenPizzaClone
+            );
+        }
 
         if (bakeStateText != null)
         {
@@ -305,16 +333,25 @@ public class OvenManager : MonoBehaviour
                 + currentBakeState;
         }
 
-        SceneManager.UnloadSceneAsync(
-            "KitchenScene"
-        );
+        SceneManager.UnloadSceneAsync("KitchenScene");
     }
 
     public void TrashPizza()
     {
+        StopOvenLoop();
+        PlaySFX(trashClip);
+
         PizzaRuntimeData.ResetPizza();
 
         ResetOven();
+
+        if (ingredientManager != null)
+            ingredientManager.ResetIngredientsForNewPizza();
+
+        if (doughManager != null)
+            doughManager.ResetDoughForNewPizza();
+
+        BuildPreparedPizzaPreview();
     }
 
     void ResetOven()
@@ -327,7 +364,10 @@ public class OvenManager : MonoBehaviour
 
         currentBakeState = "Cruda";
 
+        StopOvenLoop();
+
         ClearOvenPizza();
+        ClearPreparedPizzaPreview();
 
         if (bakeProgressBar != null)
         {
@@ -336,9 +376,48 @@ public class OvenManager : MonoBehaviour
         }
 
         if (bakeStateText != null)
+            bakeStateText.text = "Metti la pizza nel forno";
+    }
+
+    void StartOvenLoop()
+    {
+        if (ovenLoopSource == null || ovenLoopClip == null)
+            return;
+
+        ovenLoopSource.clip = ovenLoopClip;
+        ovenLoopSource.loop = true;
+        ovenLoopSource.volume = ovenLoopVolume;
+        ovenLoopSource.Play();
+    }
+
+    void StopOvenLoop()
+    {
+        if (ovenLoopSource != null)
+            ovenLoopSource.Stop();
+    }
+
+    void PlaySFX(AudioClip clip)
+    {
+        if (clip == null)
+            return;
+
+        if (AudioManager.Instance != null &&
+            AudioManager.Instance.sfxSource != null)
         {
-            bakeStateText.text =
-                "Metti la pizza nel forno";
+            AudioManager.Instance.sfxSource.PlayOneShot(
+                clip,
+                sfxVolumeMultiplier
+            );
+
+            return;
+        }
+
+        if (ovenLoopSource != null)
+        {
+            ovenLoopSource.PlayOneShot(
+                clip,
+                sfxVolumeMultiplier
+            );
         }
     }
 
@@ -351,5 +430,14 @@ public class OvenManager : MonoBehaviour
         }
 
         clonedPizzaImages.Clear();
+    }
+
+    void ClearPreparedPizzaPreview()
+    {
+        if (preparedPizzaClone != null)
+        {
+            Destroy(preparedPizzaClone);
+            preparedPizzaClone = null;
+        }
     }
 }

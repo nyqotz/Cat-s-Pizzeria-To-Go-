@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 using TMPro;
 
 public class RestaurantManager : MonoBehaviour
@@ -15,16 +16,17 @@ public class RestaurantManager : MonoBehaviour
     public CustomerSlot[] customerSlots;
 
     public GameObject orderBubble;
-
     public GameObject orderTicket;
 
     public TMP_Text ticketTitle;
     public TMP_Text ingredientsText;
     public TMP_Text bakeText;
 
+    public RectTransform readyPizzaContainer;
+    public Vector2 readyPizzaSize = new Vector2(180f, 180f);
+
     public float minSpawnTime = 2f;
     public float maxSpawnTime = 6f;
-
     public float gameplayDuration = 180f;
 
     private bool isOpen = false;
@@ -41,12 +43,16 @@ public class RestaurantManager : MonoBehaviour
 
     private int orderNumber = 0;
 
+    private GameObject readyPizzaClone;
+
     void Start()
     {
         ResetRestaurant();
 
         if (orderTicket != null)
             orderTicket.SetActive(false);
+
+        ClearReadyPizzaVisual();
     }
 
     public void OpenRestaurant()
@@ -61,15 +67,8 @@ public class RestaurantManager : MonoBehaviour
 
         openRestaurantButton.SetActive(false);
 
-        spawnRoutine =
-            StartCoroutine(
-                SpawnCustomersRandomly()
-            );
-
-        clockRoutine =
-            StartCoroutine(
-                RunClock()
-            );
+        spawnRoutine = StartCoroutine(SpawnCustomersRandomly());
+        clockRoutine = StartCoroutine(RunClock());
     }
 
     IEnumerator RunClock()
@@ -81,32 +80,22 @@ public class RestaurantManager : MonoBehaviour
             elapsed += Time.deltaTime;
 
             float normalized =
-                Mathf.Clamp01(
-                    elapsed /
-                    gameplayDuration
-                );
+                Mathf.Clamp01(elapsed / gameplayDuration);
 
             int totalMinutes =
                 Mathf.RoundToInt(
-                    Mathf.Lerp(
-                        12 * 60,
-                        15 * 60,
-                        normalized
-                    )
+                    Mathf.Lerp(12 * 60, 15 * 60, normalized)
                 );
 
-            int hours =
-                totalMinutes / 60;
-
-            int minutes =
-                totalMinutes % 60;
+            int hours = totalMinutes / 60;
+            int minutes = totalMinutes % 60;
 
             if (clockText != null)
             {
                 clockText.text =
-                    hours.ToString("00")
-                    + ":"
-                    + minutes.ToString("00");
+                    hours.ToString("00") +
+                    ":" +
+                    minutes.ToString("00");
             }
 
             yield return null;
@@ -120,15 +109,9 @@ public class RestaurantManager : MonoBehaviour
         while (isOpen)
         {
             float waitTime =
-                Random.Range(
-                    minSpawnTime,
-                    maxSpawnTime
-                );
+                Random.Range(minSpawnTime, maxSpawnTime);
 
-            yield return
-                new WaitForSeconds(
-                    waitTime
-                );
+            yield return new WaitForSeconds(waitTime);
 
             TrySpawnCustomer();
         }
@@ -139,20 +122,18 @@ public class RestaurantManager : MonoBehaviour
         if (!isOpen)
             return;
 
-        if (customerPrefabs == null
-            || customerPrefabs.Length == 0)
+        if (customerPrefabs == null ||
+            customerPrefabs.Length == 0)
             return;
 
-        if (customerSlots == null
-            || customerSlots.Length == 0)
+        if (customerSlots == null ||
+            customerSlots.Length == 0)
             return;
 
-        if (activeCustomers.Count
-            >= customerSlots.Length)
+        if (activeCustomers.Count >= customerSlots.Length)
             return;
 
-        int randomIndex =
-            GetRandomCustomerIndex();
+        int randomIndex = GetRandomCustomerIndex();
 
         GameObject customerObject =
             Instantiate(
@@ -162,8 +143,7 @@ public class RestaurantManager : MonoBehaviour
             );
 
         CustomerMover customer =
-            customerObject
-            .GetComponent<CustomerMover>();
+            customerObject.GetComponent<CustomerMover>();
 
         if (customer == null)
         {
@@ -171,8 +151,7 @@ public class RestaurantManager : MonoBehaviour
             return;
         }
 
-        customer.orderBubble =
-            orderBubble;
+        customer.orderBubble = orderBubble;
 
         activeCustomers.Add(customer);
 
@@ -189,34 +168,20 @@ public class RestaurantManager : MonoBehaviour
         do
         {
             randomIndex =
-                Random.Range(
-                    0,
-                    customerPrefabs.Length
-                );
+                Random.Range(0, customerPrefabs.Length);
         }
-        while (
-            randomIndex
-            == lastCustomerIndex
-        );
+        while (randomIndex == lastCustomerIndex);
 
-        lastCustomerIndex =
-            randomIndex;
+        lastCustomerIndex = randomIndex;
 
         return randomIndex;
     }
 
     void UpdateCustomerSlots()
     {
-        for (
-            int i = 0;
-            i < activeCustomers.Count;
-            i++
-        )
+        for (int i = 0; i < activeCustomers.Count; i++)
         {
-            activeCustomers[i]
-                .SetSlot(
-                    customerSlots[i]
-                );
+            activeCustomers[i].SetSlot(customerSlots[i]);
         }
     }
 
@@ -224,68 +189,36 @@ public class RestaurantManager : MonoBehaviour
     {
         orderNumber++;
 
-        currentOrder =
-            new PizzaOrder();
+        currentOrder = new PizzaOrder();
 
-        currentOrder.sugoPomodoro =
-            Random.value > 0.5f;
-
-        currentOrder.mozzarella =
-            Random.value > 0.5f;
-
-        currentOrder.tonno =
-            Random.value > 0.5f;
-
-        currentOrder.cipolla =
-            Random.value > 0.5f;
-
-        currentOrder.mediumBake =
-            Random.value > 0.5f;
+        currentOrder.sugoPomodoro = Random.value > 0.5f;
+        currentOrder.mozzarella = Random.value > 0.5f;
+        currentOrder.tonno = Random.value > 0.5f;
+        currentOrder.cipolla = Random.value > 0.5f;
+        currentOrder.mediumBake = Random.value > 0.5f;
 
         string ingredients = "";
 
         if (currentOrder.sugoPomodoro)
-        {
-            ingredients +=
-                "• Sugo di pomodoro\n";
-        }
+            ingredients += "• Sugo di pomodoro\n";
 
         if (currentOrder.mozzarella)
-        {
-            ingredients +=
-                "• Mozzarella\n";
-        }
+            ingredients += "• Mozzarella\n";
 
         if (currentOrder.tonno)
-        {
-            ingredients +=
-                "• Tonno\n";
-        }
+            ingredients += "• Tonno\n";
 
         if (currentOrder.cipolla)
-        {
-            ingredients +=
-                "• Cipolla\n";
-        }
+            ingredients += "• Cipolla\n";
 
         if (ingredients == "")
-        {
-            ingredients =
-                "• Margherita semplice\n";
-        }
+            ingredients = "• Margherita semplice\n";
 
         if (ticketTitle != null)
-        {
-            ticketTitle.text =
-                "ORDINE #"
-                + orderNumber;
-        }
+            ticketTitle.text = "ORDINE #" + orderNumber;
 
         if (ingredientsText != null)
-        {
-            ingredientsText.text =
-                ingredients;
-        }
+            ingredientsText.text = ingredients;
 
         if (bakeText != null)
         {
@@ -296,56 +229,192 @@ public class RestaurantManager : MonoBehaviour
         }
 
         if (orderTicket != null)
-        {
             orderTicket.SetActive(true);
+    }
+
+    public void ReceiveReadyPizzaVisual(GameObject pizzaVisual)
+    {
+        if (pizzaVisual == null ||
+            readyPizzaContainer == null)
+            return;
+
+        ClearReadyPizzaVisual();
+
+        readyPizzaClone =
+            Instantiate(
+                pizzaVisual,
+                readyPizzaContainer,
+                false
+            );
+
+        readyPizzaClone.name =
+            "ReadyPizzaOnCounter";
+
+        RectTransform pizzaRect =
+            readyPizzaClone.GetComponent<RectTransform>();
+
+        if (pizzaRect != null)
+        {
+            pizzaRect.anchorMin =
+                new Vector2(0.5f, 0.5f);
+
+            pizzaRect.anchorMax =
+                new Vector2(0.5f, 0.5f);
+
+            pizzaRect.pivot =
+                new Vector2(0.5f, 0.5f);
+
+            Vector2 originalSize =
+                pizzaRect.rect.size;
+
+            if (originalSize.x <= 0f ||
+                originalSize.y <= 0f)
+            {
+                originalSize =
+                    pizzaRect.sizeDelta;
+            }
+
+            if (originalSize.x <= 0f ||
+                originalSize.y <= 0f)
+            {
+                originalSize =
+                    new Vector2(300f, 300f);
+            }
+
+            pizzaRect.anchoredPosition =
+                Vector2.zero;
+
+            pizzaRect.sizeDelta =
+                originalSize;
+
+            float scaleX =
+                readyPizzaSize.x / originalSize.x;
+
+            float scaleY =
+                readyPizzaSize.y / originalSize.y;
+
+            pizzaRect.localScale =
+                new Vector3(scaleX, scaleY, 1f);
+        }
+
+        DisableRaycasts(readyPizzaClone);
+
+        readyPizzaContainer.gameObject
+            .SetActive(true);
+    }
+
+    void ClearReadyPizzaVisual()
+    {
+        if (readyPizzaClone != null)
+        {
+            Destroy(readyPizzaClone);
+            readyPizzaClone = null;
+        }
+
+        if (readyPizzaContainer != null)
+        {
+            readyPizzaContainer.gameObject
+                .SetActive(false);
         }
     }
 
-    public void RemoveCustomer(
-        CustomerMover customer
-    )
+    void DisableRaycasts(GameObject target)
     {
-        if (
-            activeCustomers.Contains(
-                customer
-            )
-        )
+        Graphic[] graphics =
+            target.GetComponentsInChildren<Graphic>(
+                true
+            );
+
+        for (int i = 0; i < graphics.Length; i++)
         {
-            activeCustomers
-                .Remove(customer);
-
-            if (orderBubble != null)
-            {
-                orderBubble
-                    .SetActive(false);
-            }
-
-            if (orderTicket != null)
-            {
-                orderTicket
-                    .SetActive(false);
-            }
-
-            customer
-                .LeaveRestaurant(
-                    spawnPoint
-                );
-
-            UpdateCustomerSlots();
+            graphics[i].raycastTarget = false;
         }
+    }
+
+    bool IsPizzaCorrect()
+    {
+        if (currentOrder == null)
+            return false;
+
+        if (!PizzaRuntimeData.pizzaReady)
+            return false;
+
+        if (currentOrder.sugoPomodoro !=
+            PizzaRuntimeData.hasSugo)
+            return false;
+
+        if (currentOrder.mozzarella !=
+            PizzaRuntimeData.hasMozzarella)
+            return false;
+
+        if (currentOrder.tonno !=
+            PizzaRuntimeData.hasTonno)
+            return false;
+
+        if (currentOrder.cipolla !=
+            PizzaRuntimeData.hasCipolla)
+            return false;
+
+        bool bakeCorrect =
+            currentOrder.mediumBake
+            ? PizzaRuntimeData.bakeState ==
+              "Cottura media"
+            : PizzaRuntimeData.bakeState ==
+              "Ben cotta";
+
+        if (!bakeCorrect)
+            return false;
+
+        return true;
     }
 
     public void DebugServeFirstCustomer()
     {
-        if (
-            activeCustomers.Count
-            == 0
-        )
+        if (activeCustomers.Count == 0)
             return;
 
-        RemoveCustomer(
-            activeCustomers[0]
-        );
+        if (!PizzaRuntimeData.pizzaReady)
+        {
+            Debug.Log(
+                "Non hai ancora una pizza pronta."
+            );
+
+            return;
+        }
+
+        if (!IsPizzaCorrect())
+        {
+            Debug.Log(
+                "Pizza sbagliata! Non corrisponde all'ordine."
+            );
+
+            return;
+        }
+
+        RemoveCustomer(activeCustomers[0]);
+
+        ClearReadyPizzaVisual();
+
+        PizzaRuntimeData.ResetPizza();
+        currentOrder = null;
+    }
+
+    public void RemoveCustomer(CustomerMover customer)
+    {
+        if (activeCustomers.Contains(customer))
+        {
+            activeCustomers.Remove(customer);
+
+            if (orderBubble != null)
+                orderBubble.SetActive(false);
+
+            if (orderTicket != null)
+                orderTicket.SetActive(false);
+
+            customer.LeaveRestaurant(spawnPoint);
+
+            UpdateCustomerSlots();
+        }
     }
 
     void CloseRestaurantAutomatically()
@@ -354,19 +423,13 @@ public class RestaurantManager : MonoBehaviour
 
         if (spawnRoutine != null)
         {
-            StopCoroutine(
-                spawnRoutine
-            );
-
+            StopCoroutine(spawnRoutine);
             spawnRoutine = null;
         }
 
         if (clockRoutine != null)
         {
-            StopCoroutine(
-                clockRoutine
-            );
-
+            StopCoroutine(clockRoutine);
             clockRoutine = null;
         }
 
@@ -376,25 +439,14 @@ public class RestaurantManager : MonoBehaviour
     void ResetRestaurant()
     {
         if (clockText != null)
-        {
             clockText.text = "12:00";
-        }
 
         orderNumber = 0;
 
-        if (
-            openRestaurantButton
-            != null
-        )
-        {
-            openRestaurantButton
-                .SetActive(true);
-        }
+        if (openRestaurantButton != null)
+            openRestaurantButton.SetActive(true);
 
         if (buttonText != null)
-        {
-            buttonText.text =
-                "Apri pizzeria";
-        }
+            buttonText.text = "Apri pizzeria";
     }
 }

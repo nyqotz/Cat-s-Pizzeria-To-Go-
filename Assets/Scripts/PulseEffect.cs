@@ -1,24 +1,20 @@
 using UnityEngine;
 
-public class PulseEffect : MonoBehaviour
+public class PulseLogo : MonoBehaviour
 {
-    public float speed = 2f;
-    public float scaleAmount = 0.1f;
+    [SerializeField] private float pulseSpeed = 2f;
+    [SerializeField] private float pulseAmount = 0.05f;
 
-    private Vector3 startScale;
+    private Vector3 originalScale;
 
-    void Start()
+    private void Start()
     {
-        startScale = transform.localScale;
+        originalScale = transform.localScale;
     }
 
-    void Update()
+    private void Update()
     {
-        float scale =
-            1 + Mathf.Sin(Time.time * speed)
-            * scaleAmount;
-
-        transform.localScale =
-            startScale * scale;
+        float scale = 1f + Mathf.Sin(Time.time * pulseSpeed) * pulseAmount;
+        transform.localScale = originalScale * scale;
     }
 }

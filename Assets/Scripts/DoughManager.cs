@@ -1,6 +1,5 @@
 using UnityEngine;
 using UnityEngine.UI;
-using TMPro;
 using UnityEngine.EventSystems;
 
 public class DoughManager : MonoBehaviour, IPointerDownHandler, IDragHandler
@@ -9,8 +8,7 @@ public class DoughManager : MonoBehaviour, IPointerDownHandler, IDragHandler
     public Sprite rawDoughSprite;
     public Sprite stretchedDoughSprite;
 
-    public Vector2 stretchedDoughSize =
-        new Vector2(700f,700f);
+    public Vector2 stretchedDoughSize = new Vector2(700f, 700f);
 
     public RectTransform leftPaw;
     public RectTransform rightPaw;
@@ -23,7 +21,6 @@ public class DoughManager : MonoBehaviour, IPointerDownHandler, IDragHandler
 
     public AudioSource doughAudioSource;
     public AudioClip kneadingMusic;
-
     public float kneadingMusicVolume = 0.10f;
 
     public float pawPressDistance = 25f;
@@ -46,34 +43,40 @@ public class DoughManager : MonoBehaviour, IPointerDownHandler, IDragHandler
     private Vector2 leftPawStart;
     private Vector2 rightPawStart;
 
+    private Vector2 doughStartSize;
+    private Vector3 doughStartScale;
+
+    private Sprite leftPawStartSprite;
+    private Sprite rightPawStartSprite;
+
     private const int requiredTaps = 10;
     private const int requiredCircles = 4;
 
     void Start()
     {
+        SaveStartValues();
+        ResetDoughForNewPizza();
+    }
+
+    void SaveStartValues()
+    {
         if (doughImage != null)
         {
-            if (rawDoughSprite != null)
-            {
-                doughImage.sprite =
-                    rawDoughSprite;
-            }
-
-            doughImage.raycastTarget =
-                true;
+            doughStartSize = doughImage.rectTransform.sizeDelta;
+            doughStartScale = doughImage.rectTransform.localScale;
         }
 
         if (leftPaw != null)
-        {
-            leftPawStart =
-                leftPaw.anchoredPosition;
-        }
+            leftPawStart = leftPaw.anchoredPosition;
 
         if (rightPaw != null)
-        {
-            rightPawStart =
-                rightPaw.anchoredPosition;
-        }
+            rightPawStart = rightPaw.anchoredPosition;
+
+        if (leftPawImage != null)
+            leftPawStartSprite = leftPawImage.sprite;
+
+        if (rightPawImage != null)
+            rightPawStartSprite = rightPawImage.sprite;
     }
 
     void OnDisable()
@@ -81,9 +84,7 @@ public class DoughManager : MonoBehaviour, IPointerDownHandler, IDragHandler
         StopKneadingMusic();
     }
 
-    public void OnPointerDown(
-        PointerEventData eventData
-    )
+    public void OnPointerDown(PointerEventData eventData)
     {
         if (doughReady)
             return;
@@ -97,17 +98,12 @@ public class DoughManager : MonoBehaviour, IPointerDownHandler, IDragHandler
         if (tapCount < requiredTaps)
         {
             tapCount++;
-
             AnimatePawTap();
-
-            previousDirection =
-                Vector2.zero;
+            previousDirection = Vector2.zero;
         }
     }
 
-    public void OnDrag(
-        PointerEventData eventData
-    )
+    public void OnDrag(PointerEventData eventData)
     {
         if (doughReady)
             return;
@@ -121,329 +117,215 @@ public class DoughManager : MonoBehaviour, IPointerDownHandler, IDragHandler
             kneadingMusicStarted = true;
         }
 
-        AnimatePawCircle(
-            eventData.delta
-        );
+        AnimatePawCircle(eventData.delta);
 
         Vector2 currentDirection =
-            (
-                eventData.position
-                - eventData.pressPosition
-            ).normalized;
+            (eventData.position - eventData.pressPosition).normalized;
 
-        if (currentDirection ==
-            Vector2.zero)
+        if (currentDirection == Vector2.zero)
             return;
 
-        if (previousDirection !=
-            Vector2.zero)
+        if (previousDirection != Vector2.zero)
         {
             float angle =
-                Vector2.SignedAngle(
-                    previousDirection,
-                    currentDirection
-                );
+                Vector2.SignedAngle(previousDirection, currentDirection);
 
-            accumulatedRotation +=
-                Mathf.Abs(angle);
+            accumulatedRotation += Mathf.Abs(angle);
 
-            if (
-                accumulatedRotation
-                >= 360f
-            )
+            if (accumulatedRotation >= 360f)
             {
                 circleCount++;
-
-                accumulatedRotation =
-                    0f;
+                accumulatedRotation = 0f;
 
                 SwitchPaw();
 
-                if (
-                    circleCount
-                    >= requiredCircles
-                )
+                if (circleCount >= requiredCircles)
                 {
                     CompleteDough();
                 }
             }
         }
 
-        previousDirection =
-            currentDirection;
+        previousDirection = currentDirection;
     }
 
     void AnimatePawTap()
     {
         RectTransform paw =
-            useLeftPaw
-            ? leftPaw
-            : rightPaw;
+            useLeftPaw ? leftPaw : rightPaw;
 
         Vector2 start =
-            useLeftPaw
-            ? leftPawStart
-            : rightPawStart;
+            useLeftPaw ? leftPawStart : rightPawStart;
 
         if (paw != null)
         {
-            StartCoroutine(
-                PawPressAnimation(
-                    paw,
-                    start
-                )
-            );
+            StartCoroutine(PawPressAnimation(paw, start));
         }
 
         SwitchPaw();
     }
 
-    void AnimatePawCircle(
-        Vector2 delta
-    )
+    void AnimatePawCircle(Vector2 delta)
     {
         RectTransform paw =
-            useLeftPaw
-            ? leftPaw
-            : rightPaw;
+            useLeftPaw ? leftPaw : rightPaw;
 
         if (paw == null)
             return;
 
         Vector2 start =
-            useLeftPaw
-            ? leftPawStart
-            : rightPawStart;
+            useLeftPaw ? leftPawStart : rightPawStart;
 
-        paw.anchoredPosition +=
-            delta *
-            pawCircleMoveMultiplier;
+        paw.anchoredPosition += delta * pawCircleMoveMultiplier;
 
-        if (
-            Vector2.Distance(
-                paw.anchoredPosition,
-                start
-            )
-            >
-            pawCircleMaxDistance
-        )
+        if (Vector2.Distance(paw.anchoredPosition, start) > pawCircleMaxDistance)
         {
             paw.anchoredPosition =
                 start +
-                (
-                    paw.anchoredPosition
-                    - start
-                ).normalized
-                *
+                (paw.anchoredPosition - start).normalized *
                 pawCircleMaxDistance;
         }
     }
 
-    System.Collections.IEnumerator
-    PawPressAnimation(
-        RectTransform paw,
-        Vector2 start
-    )
+    System.Collections.IEnumerator PawPressAnimation(RectTransform paw, Vector2 start)
     {
         Vector2 down =
-            start +
-            new Vector2(
-                0f,
-                -pawPressDistance
-            );
+            start + new Vector2(0f, -pawPressDistance);
 
         float time = 0f;
 
-        while (
-            time <
-            pawPressDuration
-        )
+        while (time < pawPressDuration)
         {
-            time +=
-                Time.deltaTime;
+            time += Time.deltaTime;
 
             float t =
-                Mathf.SmoothStep(
-                    0f,
-                    1f,
-                    time /
-                    pawPressDuration
-                );
+                Mathf.SmoothStep(0f, 1f, time / pawPressDuration);
 
             paw.anchoredPosition =
-                Vector2.Lerp(
-                    start,
-                    down,
-                    t
-                );
+                Vector2.Lerp(start, down, t);
 
             yield return null;
         }
 
         time = 0f;
 
-        while (
-            time <
-            pawReturnDuration
-        )
+        while (time < pawReturnDuration)
         {
-            time +=
-                Time.deltaTime;
+            time += Time.deltaTime;
 
             float t =
-                Mathf.SmoothStep(
-                    0f,
-                    1f,
-                    time /
-                    pawReturnDuration
-                );
+                Mathf.SmoothStep(0f, 1f, time / pawReturnDuration);
 
             paw.anchoredPosition =
-                Vector2.Lerp(
-                    down,
-                    start,
-                    t
-                );
+                Vector2.Lerp(down, start, t);
 
             yield return null;
         }
 
-        paw.anchoredPosition =
-            start;
+        paw.anchoredPosition = start;
     }
 
     void SwitchPaw()
     {
-        useLeftPaw =
-            !useLeftPaw;
+        useLeftPaw = !useLeftPaw;
     }
 
     void CompleteDough()
     {
         doughReady = true;
 
-        if (
-            doughImage != null
-            &&
-            stretchedDoughSprite
-            != null
-        )
+        PizzaRuntimeData.doughReady = true;
+        PizzaRuntimeData.pizzaInOven = false;
+
+        if (doughImage != null && stretchedDoughSprite != null)
         {
-            doughImage.sprite =
-                stretchedDoughSprite;
+            doughImage.sprite = stretchedDoughSprite;
+            doughImage.rectTransform.sizeDelta = stretchedDoughSize;
+            doughImage.raycastTarget = true;
 
-            doughImage
-                .rectTransform
-                .sizeDelta =
-                stretchedDoughSize;
-
-            doughImage
-                .transform
-                .SetAsLastSibling();
-
-            doughImage
-                .raycastTarget =
-                true;
+            doughImage.transform.SetAsLastSibling();
         }
 
-        if (
-            leftPawImage != null
-            &&
-            leftPawHoldingSprite
-            != null
-        )
-        {
-            leftPawImage.sprite =
-                leftPawHoldingSprite;
-        }
+        if (leftPawImage != null && leftPawHoldingSprite != null)
+            leftPawImage.sprite = leftPawHoldingSprite;
 
-        if (
-            rightPawImage != null
-            &&
-            rightPawHoldingSprite
-            != null
-        )
-        {
-            rightPawImage.sprite =
-                rightPawHoldingSprite;
-        }
+        if (rightPawImage != null && rightPawHoldingSprite != null)
+            rightPawImage.sprite = rightPawHoldingSprite;
 
         if (leftPaw != null)
-        {
-            leftPaw
-                .anchoredPosition =
-                leftPawStart;
-        }
+            leftPaw.anchoredPosition = leftPawStart;
 
         if (rightPaw != null)
-        {
-            rightPaw
-                .anchoredPosition =
-                rightPawStart;
-        }
+            rightPaw.anchoredPosition = rightPawStart;
 
         StopKneadingMusic();
     }
 
-    void StartKneadingMusic()
+    public void ResetDoughForNewPizza()
     {
-        if (
-            AudioManager.Instance
-            != null
-            &&
-            AudioManager.Instance
-            .musicSource
-            != null
-        )
+        tapCount = 0;
+        circleCount = 0;
+
+        doughReady = false;
+        kneadingMusicStarted = false;
+        useLeftPaw = true;
+
+        accumulatedRotation = 0f;
+        previousDirection = Vector2.zero;
+
+        StopKneadingMusic();
+
+        if (doughImage != null)
         {
-            AudioManager.Instance
-                .musicSource
-                .Pause();
+            if (rawDoughSprite != null)
+                doughImage.sprite = rawDoughSprite;
+
+            doughImage.rectTransform.sizeDelta = doughStartSize;
+            doughImage.rectTransform.localScale = doughStartScale;
+            doughImage.raycastTarget = true;
+
+            doughImage.transform.SetSiblingIndex(0);
         }
 
-        if (
-            doughAudioSource
-            == null
-            ||
-            kneadingMusic
-            == null
-        )
+        if (leftPaw != null)
+            leftPaw.anchoredPosition = leftPawStart;
+
+        if (rightPaw != null)
+            rightPaw.anchoredPosition = rightPawStart;
+
+        if (leftPawImage != null)
+            leftPawImage.sprite = leftPawStartSprite;
+
+        if (rightPawImage != null)
+            rightPawImage.sprite = rightPawStartSprite;
+    }
+
+    void StartKneadingMusic()
+    {
+        if (AudioManager.Instance != null &&
+            AudioManager.Instance.musicSource != null)
+        {
+            AudioManager.Instance.musicSource.Pause();
+        }
+
+        if (doughAudioSource == null || kneadingMusic == null)
             return;
 
-        doughAudioSource.clip =
-            kneadingMusic;
-
-        doughAudioSource.loop =
-            true;
-
-        doughAudioSource.volume =
-            kneadingMusicVolume;
-
+        doughAudioSource.clip = kneadingMusic;
+        doughAudioSource.loop = true;
+        doughAudioSource.volume = kneadingMusicVolume;
         doughAudioSource.Play();
     }
 
     void StopKneadingMusic()
     {
-        if (
-            doughAudioSource
-            != null
-        )
-        {
+        if (doughAudioSource != null)
             doughAudioSource.Stop();
-        }
 
-        if (
-            AudioManager.Instance
-            != null
-            &&
-            AudioManager.Instance
-            .musicSource
-            != null
-        )
+        if (AudioManager.Instance != null &&
+            AudioManager.Instance.musicSource != null)
         {
-            AudioManager.Instance
-                .musicSource
-                .UnPause();
+            AudioManager.Instance.musicSource.UnPause();
         }
     }
 }

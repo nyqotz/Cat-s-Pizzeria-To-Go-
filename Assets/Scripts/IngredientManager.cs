@@ -29,15 +29,15 @@ public class IngredientManager : MonoBehaviour
     private bool sauceMode = false;
     private float sauceTimer = 0f;
 
-    private bool hasSugoPomodoro = false;
-    private bool hasMozzarella = false;
-    private bool hasCipolla = false;
-    private bool hasTonno = false;
-
     void Start()
     {
-        PizzaRuntimeData.ResetPizza();
         ClearHeldIngredient();
+        RefreshPizzaVisibility();
+    }
+
+    void OnEnable()
+    {
+        RefreshPizzaVisibility();
     }
 
     void Update()
@@ -46,8 +46,49 @@ public class IngredientManager : MonoBehaviour
             sauceTimer -= Time.deltaTime;
     }
 
+    public void RefreshPizzaVisibility()
+    {
+        bool shouldShowPizza =
+            PizzaRuntimeData.doughReady &&
+            !PizzaRuntimeData.pizzaInOven;
+
+        if (pizzaBaseImage != null)
+        {
+            pizzaBaseImage.gameObject.SetActive(shouldShowPizza);
+        }
+
+        if (!shouldShowPizza)
+        {
+            ClearHeldIngredient();
+        }
+    }
+
+    public void HidePizzaAfterOvenInsert()
+    {
+        ClearHeldIngredient();
+
+        if (pizzaBaseImage != null)
+        {
+            pizzaBaseImage.gameObject.SetActive(false);
+        }
+    }
+
+    public void ResetIngredientsForNewPizza()
+    {
+        ClearHeldIngredient();
+        ClearPlacedIngredients();
+
+        if (pizzaBaseImage != null)
+        {
+            pizzaBaseImage.gameObject.SetActive(false);
+        }
+    }
+
     public void StartHoldingIngredient(string ingredientName, Vector2 screenPosition)
     {
+        if (!PizzaRuntimeData.doughReady || PizzaRuntimeData.pizzaInOven)
+            return;
+
         heldIngredient = ingredientName;
         sauceMode = ingredientName == "SugoPomodoro";
         sauceTimer = 0f;
@@ -55,7 +96,8 @@ public class IngredientManager : MonoBehaviour
         if (heldIngredientImage == null)
             return;
 
-        RectTransform heldRect = heldIngredientImage.GetComponent<RectTransform>();
+        RectTransform heldRect =
+            heldIngredientImage.GetComponent<RectTransform>();
 
         heldIngredientImage.sprite = GetSprite(ingredientName);
         heldIngredientImage.raycastTarget = false;
@@ -112,7 +154,8 @@ public class IngredientManager : MonoBehaviour
         if (heldIngredientImage == null)
             return;
 
-        RectTransform heldRect = heldIngredientImage.GetComponent<RectTransform>();
+        RectTransform heldRect =
+            heldIngredientImage.GetComponent<RectTransform>();
 
         heldRect.sizeDelta = heldIngredientSize;
         heldRect.localScale = Vector3.one;
@@ -129,12 +172,15 @@ public class IngredientManager : MonoBehaviour
                 screenPosition,
                 GetUICamera(),
                 out Vector2 localPoint))
+        {
             return false;
+        }
 
-        float radius = Mathf.Min(
-            pizzaDropArea.rect.width,
-            pizzaDropArea.rect.height
-        ) * 0.5f;
+        float radius =
+            Mathf.Min(
+                pizzaDropArea.rect.width,
+                pizzaDropArea.rect.height
+            ) * 0.5f;
 
         return localPoint.magnitude <= radius;
     }
@@ -151,22 +197,24 @@ public class IngredientManager : MonoBehaviour
             out Vector2 localPoint
         );
 
-        GameObject dot = Instantiate(
-            placedSugoDotPrefab,
-            sauceContainer,
-            false
-        );
+        GameObject dot =
+            Instantiate(
+                placedSugoDotPrefab,
+                sauceContainer,
+                false
+            );
 
-        RectTransform dotRect = dot.GetComponent<RectTransform>();
+        RectTransform dotRect =
+            dot.GetComponent<RectTransform>();
 
         dotRect.anchorMin = new Vector2(0.5f, 0.5f);
         dotRect.anchorMax = new Vector2(0.5f, 0.5f);
         dotRect.pivot = new Vector2(0.5f, 0.5f);
+
         dotRect.anchoredPosition = localPoint;
         dotRect.sizeDelta = sauceDotSize;
         dotRect.localScale = Vector3.one;
 
-        hasSugoPomodoro = true;
         PizzaRuntimeData.hasSugo = true;
     }
 
@@ -184,37 +232,58 @@ public class IngredientManager : MonoBehaviour
             out Vector2 localPoint
         );
 
-        GameObject placed = Instantiate(
-            prefab,
-            pizzaDropArea,
-            false
-        );
+        GameObject placed =
+            Instantiate(
+                prefab,
+                pizzaDropArea,
+                false
+            );
 
-        RectTransform placedRect = placed.GetComponent<RectTransform>();
+        RectTransform placedRect =
+            placed.GetComponent<RectTransform>();
 
         placedRect.anchorMin = new Vector2(0.5f, 0.5f);
         placedRect.anchorMax = new Vector2(0.5f, 0.5f);
         placedRect.pivot = new Vector2(0.5f, 0.5f);
+
         placedRect.anchoredPosition = localPoint;
         placedRect.sizeDelta = normalIngredientSize;
         placedRect.localScale = Vector3.one;
 
         if (ingredient == "Mozzarella")
-        {
-            hasMozzarella = true;
             PizzaRuntimeData.hasMozzarella = true;
-        }
 
         if (ingredient == "Cipolla")
-        {
-            hasCipolla = true;
             PizzaRuntimeData.hasCipolla = true;
-        }
 
         if (ingredient == "Tonno")
-        {
-            hasTonno = true;
             PizzaRuntimeData.hasTonno = true;
+    }
+
+    void ClearPlacedIngredients()
+    {
+        if (sauceContainer != null)
+        {
+            for (int i = sauceContainer.childCount - 1; i >= 0; i--)
+            {
+                Destroy(sauceContainer.GetChild(i).gameObject);
+            }
+        }
+
+        if (pizzaDropArea != null)
+        {
+            for (int i = pizzaDropArea.childCount - 1; i >= 0; i--)
+            {
+                Transform child = pizzaDropArea.GetChild(i);
+
+                if (sauceContainer != null &&
+                    child == sauceContainer)
+                {
+                    continue;
+                }
+
+                Destroy(child.gameObject);
+            }
         }
     }
 
@@ -251,7 +320,8 @@ public class IngredientManager : MonoBehaviour
 
     Camera GetUICamera()
     {
-        Canvas canvas = GetComponentInParent<Canvas>();
+        Canvas canvas =
+            GetComponentInParent<Canvas>();
 
         if (canvas == null)
             return null;
@@ -264,14 +334,20 @@ public class IngredientManager : MonoBehaviour
 
     void ShowHeldIngredientVisual()
     {
-        if (heldIngredientImage != null && !heldIngredientImage.gameObject.activeSelf)
+        if (heldIngredientImage != null &&
+            !heldIngredientImage.gameObject.activeSelf)
+        {
             heldIngredientImage.gameObject.SetActive(true);
+        }
     }
 
     void HideHeldIngredientVisual()
     {
-        if (heldIngredientImage != null && heldIngredientImage.gameObject.activeSelf)
+        if (heldIngredientImage != null &&
+            heldIngredientImage.gameObject.activeSelf)
+        {
             heldIngredientImage.gameObject.SetActive(false);
+        }
     }
 
     void ClearHeldIngredient()
@@ -285,25 +361,5 @@ public class IngredientManager : MonoBehaviour
             heldIngredientImage.sprite = null;
             heldIngredientImage.gameObject.SetActive(false);
         }
-    }
-
-    public bool HasSugoPomodoro()
-    {
-        return hasSugoPomodoro;
-    }
-
-    public bool HasMozzarella()
-    {
-        return hasMozzarella;
-    }
-
-    public bool HasCipolla()
-    {
-        return hasCipolla;
-    }
-
-    public bool HasTonno()
-    {
-        return hasTonno;
     }
 }
