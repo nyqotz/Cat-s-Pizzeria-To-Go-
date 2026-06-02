@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1045 &1
+EditorBuildSettings:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Scenes:
+  - enabled: 1
+    path: Assets/Scenes/StartGame.unity
+    guid: 492d5c1067e66f54dbeea321ecf8412f
+  - enabled: 1
+    path: Assets/Scenes/LoginScene.unity
+    guid: 6af80e3343df7464ebcc62330bd2568c
+  - enabled: 1
+    path: Assets/Scenes/MainScene.unity
+    guid: 99c9720ab356a0642a771bea13969a05
+  - enabled: 1
+    path: Assets/Scenes/KitchenScene.unity
+    guid: 65d0d13d97a97cd429bccf8506371d7f
+  m_configObjects:
+    com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
