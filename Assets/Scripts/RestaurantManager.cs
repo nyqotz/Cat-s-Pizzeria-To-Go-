@@ -33,10 +33,11 @@ public class RestaurantManager : MonoBehaviour
     public RectTransform readyPizzaContainer;
     public Vector2 readyPizzaSize = new Vector2(180f, 180f);
 
-    public TMP_Text reputationText;
-    public int correctPizzaReputation = 100;
-    public int wrongPizzaReputation = 30;
-    public int timeoutPenaltyReputation = 50;
+    public StarReputationUI starReputationUI;
+    public float startingStars = 3f;
+    public float correctPizzaStars = 0.1f;
+    public float wrongPizzaStars = -0.2f;
+    public float timeoutPenaltyStars = -0.3f;
 
     public float customerPatienceTime = 40f;
 
@@ -70,8 +71,8 @@ public class RestaurantManager : MonoBehaviour
     private PizzaOrder currentOrder;
 
     private int orderNumber = 0;
-    private int reputation = 0;
     private int currentDay = 1;
+    private float starRating = 3f;
 
     private GameObject readyPizzaClone;
 
@@ -88,7 +89,12 @@ public class RestaurantManager : MonoBehaviour
         HideBubbleIngredient();
 
         ClearReadyPizzaVisual();
-        UpdateReputationText();
+
+        starRating = startingStars;
+
+        if (starReputationUI != null)
+            starReputationUI.SetRating(starRating, false);
+
         UpdateDayText();
     }
 
@@ -233,9 +239,7 @@ public class RestaurantManager : MonoBehaviour
     void UpdateCustomerSlots()
     {
         for (int i = 0; i < activeCustomers.Count; i++)
-        {
             activeCustomers[i].SetSlot(customerSlots[i]);
-        }
     }
 
     public void GenerateRandomOrder()
@@ -407,18 +411,7 @@ public class RestaurantManager : MonoBehaviour
 
         CustomerMover customer = activeCustomers[0];
 
-        reputation -= timeoutPenaltyReputation;
-
-        if (reputation < 0)
-            reputation = 0;
-
-        UpdateReputationText();
-
-        Debug.Log(
-            "Recensione negativa! -" +
-            timeoutPenaltyReputation +
-            " reputazione"
-        );
+        ChangeStars(timeoutPenaltyStars);
 
         ClearReadyPizzaVisual();
 
@@ -552,15 +545,9 @@ public class RestaurantManager : MonoBehaviour
     void PrepareSceneAfterResult(bool correct)
     {
         if (correct)
-        {
-            reputation += correctPizzaReputation;
-        }
+            ChangeStars(correctPizzaStars);
         else
-        {
-            reputation += wrongPizzaReputation;
-        }
-
-        UpdateReputationText();
+            ChangeStars(wrongPizzaStars);
 
         ClearReadyPizzaVisual();
 
@@ -629,9 +616,7 @@ public class RestaurantManager : MonoBehaviour
             target.GetComponentsInChildren<Graphic>(true);
 
         for (int i = 0; i < graphics.Length; i++)
-        {
             graphics[i].raycastTarget = false;
-        }
     }
 
     bool IsPizzaCorrect()
@@ -759,10 +744,13 @@ public class RestaurantManager : MonoBehaviour
             buttonText.text = "Apri pizzeria";
     }
 
-    void UpdateReputationText()
+    void ChangeStars(float amount)
     {
-        if (reputationText != null)
-            reputationText.text = "Reputazione: " + reputation;
+        starRating += amount;
+        starRating = Mathf.Clamp(starRating, 0f, 5f);
+
+        if (starReputationUI != null)
+            starReputationUI.SetRating(starRating, true);
     }
 
     void UpdateDayText()
