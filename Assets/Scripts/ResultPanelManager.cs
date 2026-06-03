@@ -102,6 +102,8 @@ public class ResultPanelManager : MonoBehaviour
     {
         PrepareInitialState();
 
+        PauseGameMusic();
+
         SetupCustomer(customerSprite);
         SetupPizza(pizzaVisual);
 
@@ -138,6 +140,8 @@ public class ResultPanelManager : MonoBehaviour
         yield return FadeOverlay(1f, 0f, returnFadeDuration);
 
         ClearPizza();
+
+        ResumeGameMusic();
 
         gameObject.SetActive(false);
 
@@ -403,6 +407,28 @@ public class ResultPanelManager : MonoBehaviour
         }
 
         rect.localRotation = Quaternion.identity;
+    }
+
+    void PauseGameMusic()
+    {
+        if (AudioManager.Instance == null)
+            return;
+
+        if (AudioManager.Instance.musicSource == null)
+            return;
+
+        AudioManager.Instance.musicSource.Pause();
+    }
+
+    void ResumeGameMusic()
+    {
+        if (AudioManager.Instance == null)
+            return;
+
+        if (AudioManager.Instance.musicSource == null)
+            return;
+
+        AudioManager.Instance.musicSource.UnPause();
     }
 
     void PlaySFX(AudioClip clip)

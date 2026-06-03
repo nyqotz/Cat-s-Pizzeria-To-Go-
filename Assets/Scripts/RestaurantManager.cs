@@ -8,6 +8,7 @@ public class RestaurantManager : MonoBehaviour
 {
     public TMP_Text buttonText;
     public TMP_Text clockText;
+    public TMP_Text dayText;
 
     public GameObject openRestaurantButton;
 
@@ -32,11 +33,19 @@ public class RestaurantManager : MonoBehaviour
     public RectTransform readyPizzaContainer;
     public Vector2 readyPizzaSize = new Vector2(180f, 180f);
 
-    public TMP_Text scoreText;
-    public int correctPizzaPoints = 100;
-    public int wrongPizzaPoints = 30;
+    public TMP_Text reputationText;
+    public int correctPizzaReputation = 100;
+    public int wrongPizzaReputation = 30;
+    public int timeoutPenaltyReputation = 50;
+
+    public float customerPatienceTime = 40f;
 
     public ResultPanelManager resultPanelManager;
+
+    public AudioClip doorBellClip;
+    public AudioClip dayEndClip;
+    public float doorBellVolume = 0.3f;
+    public float dayEndVolume = 0.5f;
 
     public float minSpawnTime = 2f;
     public float maxSpawnTime = 6f;
@@ -47,20 +56,22 @@ public class RestaurantManager : MonoBehaviour
 
     private bool isOpen = false;
     private bool isShowingResult = false;
+    private bool dayEndedWaitingForNextDay = false;
 
     private Coroutine spawnRoutine;
     private Coroutine clockRoutine;
     private Coroutine orderRevealRoutine;
+    private Coroutine patienceRoutine;
 
     private List<CustomerMover> activeCustomers =
         new List<CustomerMover>();
 
     private int lastCustomerIndex = -1;
-
     private PizzaOrder currentOrder;
 
     private int orderNumber = 0;
-    private int score = 0;
+    private int reputation = 0;
+    private int currentDay = 1;
 
     private GameObject readyPizzaClone;
 
@@ -77,7 +88,8 @@ public class RestaurantManager : MonoBehaviour
         HideBubbleIngredient();
 
         ClearReadyPizzaVisual();
-        UpdateScoreText();
+        UpdateReputationText();
+        UpdateDayText();
     }
 
     public void OpenRestaurant()
@@ -85,12 +97,28 @@ public class RestaurantManager : MonoBehaviour
         if (isOpen)
             return;
 
+        if (dayEndedWaitingForNextDay && activeCustomers.Count > 0)
+            return;
+
+        if (dayEndedWaitingForNextDay)
+        {
+            currentDay++;
+            dayEndedWaitingForNextDay = false;
+            UpdateDayText();
+        }
+
         isOpen = true;
+        orderNumber = 0;
+        lastCustomerIndex = -1;
+
+        if (clockText != null)
+            clockText.text = "12:00";
 
         if (AudioManager.Instance != null)
             AudioManager.Instance.PlayClick();
 
-        openRestaurantButton.SetActive(false);
+        if (openRestaurantButton != null)
+            openRestaurantButton.SetActive(false);
 
         spawnRoutine = StartCoroutine(SpawnCustomersRandomly());
         clockRoutine = StartCoroutine(RunClock());
@@ -147,12 +175,10 @@ public class RestaurantManager : MonoBehaviour
         if (!isOpen)
             return;
 
-        if (customerPrefabs == null ||
-            customerPrefabs.Length == 0)
+        if (customerPrefabs == null || customerPrefabs.Length == 0)
             return;
 
-        if (customerSlots == null ||
-            customerSlots.Length == 0)
+        if (customerSlots == null || customerSlots.Length == 0)
             return;
 
         if (activeCustomers.Count >= customerSlots.Length)
@@ -179,6 +205,8 @@ public class RestaurantManager : MonoBehaviour
         customer.orderBubble = orderBubble;
 
         activeCustomers.Add(customer);
+
+        PlaySFX(doorBellClip, doorBellVolume);
 
         UpdateCustomerSlots();
     }
@@ -218,6 +246,8 @@ public class RestaurantManager : MonoBehaviour
             orderRevealRoutine = null;
         }
 
+        StopPatienceTimer();
+
         orderNumber++;
 
         currentOrder = new PizzaOrder();
@@ -252,6 +282,8 @@ public class RestaurantManager : MonoBehaviour
 
         orderRevealRoutine =
             StartCoroutine(RevealOrderIngredients());
+
+        StartPatienceTimer();
     }
 
     IEnumerator RevealOrderIngredients()
@@ -271,6 +303,10 @@ public class RestaurantManager : MonoBehaviour
                 ingredientsText.text = ticketIngredients;
 
             HideBubbleIngredient();
+
+            if (orderBubble != null)
+                orderBubble.SetActive(false);
+
             yield break;
         }
 
@@ -290,6 +326,9 @@ public class RestaurantManager : MonoBehaviour
         yield return new WaitForSeconds(lastIngredientHoldTime);
 
         HideBubbleIngredient();
+
+        if (orderBubble != null)
+            orderBubble.SetActive(false);
     }
 
     List<OrderIngredientVisual> GetRequestedIngredientVisuals()
@@ -301,44 +340,16 @@ public class RestaurantManager : MonoBehaviour
             return result;
 
         if (currentOrder.sugoPomodoro)
-        {
-            result.Add(
-                new OrderIngredientVisual(
-                    "Sugo di pomodoro",
-                    sugoSprite
-                )
-            );
-        }
+            result.Add(new OrderIngredientVisual("Sugo di pomodoro", sugoSprite));
 
         if (currentOrder.mozzarella)
-        {
-            result.Add(
-                new OrderIngredientVisual(
-                    "Mozzarella",
-                    mozzarellaSprite
-                )
-            );
-        }
+            result.Add(new OrderIngredientVisual("Mozzarella", mozzarellaSprite));
 
         if (currentOrder.tonno)
-        {
-            result.Add(
-                new OrderIngredientVisual(
-                    "Tonno",
-                    tonnoSprite
-                )
-            );
-        }
+            result.Add(new OrderIngredientVisual("Tonno", tonnoSprite));
 
         if (currentOrder.cipolla)
-        {
-            result.Add(
-                new OrderIngredientVisual(
-                    "Cipolla",
-                    cipollaSprite
-                )
-            );
-        }
+            result.Add(new OrderIngredientVisual("Cipolla", cipollaSprite));
 
         return result;
     }
@@ -362,10 +373,85 @@ public class RestaurantManager : MonoBehaviour
         ingredientImage.gameObject.SetActive(false);
     }
 
+    void StartPatienceTimer()
+    {
+        StopPatienceTimer();
+
+        patienceRoutine =
+            StartCoroutine(CustomerPatienceRoutine());
+    }
+
+    void StopPatienceTimer()
+    {
+        if (patienceRoutine != null)
+        {
+            StopCoroutine(patienceRoutine);
+            patienceRoutine = null;
+        }
+    }
+
+    IEnumerator CustomerPatienceRoutine()
+    {
+        yield return new WaitForSeconds(customerPatienceTime);
+
+        if (isShowingResult)
+            yield break;
+
+        CustomerTimedOut();
+    }
+
+    void CustomerTimedOut()
+    {
+        if (activeCustomers.Count == 0)
+            return;
+
+        CustomerMover customer = activeCustomers[0];
+
+        reputation -= timeoutPenaltyReputation;
+
+        if (reputation < 0)
+            reputation = 0;
+
+        UpdateReputationText();
+
+        Debug.Log(
+            "Recensione negativa! -" +
+            timeoutPenaltyReputation +
+            " reputazione"
+        );
+
+        ClearReadyPizzaVisual();
+
+        if (orderBubble != null)
+            orderBubble.SetActive(false);
+
+        HideBubbleIngredient();
+
+        if (orderTicket != null)
+            orderTicket.SetActive(false);
+
+        if (orderRevealRoutine != null)
+        {
+            StopCoroutine(orderRevealRoutine);
+            orderRevealRoutine = null;
+        }
+
+        PizzaRuntimeData.ResetPizza();
+        currentOrder = null;
+
+        if (activeCustomers.Contains(customer))
+        {
+            activeCustomers.Remove(customer);
+            customer.LeaveRestaurant(spawnPoint);
+            UpdateCustomerSlots();
+        }
+
+        TryShowOpenButtonAfterDayEnd();
+    }
+
     public void ReceiveReadyPizzaVisual(GameObject pizzaVisual)
     {
-        if (pizzaVisual == null ||
-            readyPizzaContainer == null)
+        if (pizzaVisual == null || readyPizzaContainer == null)
             return;
 
         ClearReadyPizzaVisual();
@@ -377,51 +463,30 @@ public class RestaurantManager : MonoBehaviour
                 false
             );
 
-        readyPizzaClone.name =
-            "ReadyPizzaOnCounter";
+        readyPizzaClone.name = "ReadyPizzaOnCounter";
 
         RectTransform pizzaRect =
             readyPizzaClone.GetComponent<RectTransform>();
 
         if (pizzaRect != null)
         {
-            pizzaRect.anchorMin =
-                new Vector2(0.5f, 0.5f);
+            pizzaRect.anchorMin = new Vector2(0.5f, 0.5f);
+            pizzaRect.anchorMax = new Vector2(0.5f, 0.5f);
+            pizzaRect.pivot = new Vector2(0.5f, 0.5f);
 
-            pizzaRect.anchorMax =
-                new Vector2(0.5f, 0.5f);
+            Vector2 originalSize = pizzaRect.rect.size;
 
-            pizzaRect.pivot =
-                new Vector2(0.5f, 0.5f);
+            if (originalSize.x <= 0f || originalSize.y <= 0f)
+                originalSize = pizzaRect.sizeDelta;
 
-            Vector2 originalSize =
-                pizzaRect.rect.size;
+            if (originalSize.x <= 0f || originalSize.y <= 0f)
+                originalSize = new Vector2(300f, 300f);
 
-            if (originalSize.x <= 0f ||
-                originalSize.y <= 0f)
-            {
-                originalSize =
-                    pizzaRect.sizeDelta;
-            }
+            pizzaRect.anchoredPosition = Vector2.zero;
+            pizzaRect.sizeDelta = originalSize;
 
-            if (originalSize.x <= 0f ||
-                originalSize.y <= 0f)
-            {
-                originalSize =
-                    new Vector2(300f, 300f);
-            }
-
-            pizzaRect.anchoredPosition =
-                Vector2.zero;
-
-            pizzaRect.sizeDelta =
-                originalSize;
-
-            float scaleX =
-                readyPizzaSize.x / originalSize.x;
-
-            float scaleY =
-                readyPizzaSize.y / originalSize.y;
+            float scaleX = readyPizzaSize.x / originalSize.x;
+            float scaleY = readyPizzaSize.y / originalSize.y;
 
             pizzaRect.localScale =
                 new Vector3(scaleX, scaleY, 1f);
@@ -449,19 +514,17 @@ public class RestaurantManager : MonoBehaviour
         if (!PizzaRuntimeData.pizzaReady)
             return;
 
-        CustomerMover customer =
-            activeCustomers[0];
+        CustomerMover customer = activeCustomers[0];
 
-        bool correct =
-            IsPizzaCorrect();
+        bool correct = IsPizzaCorrect();
 
-        Sprite customerSprite =
-            GetCustomerSprite(customer);
+        Sprite customerSprite = GetCustomerSprite(customer);
 
-        GameObject pizzaVisualForResult =
-            readyPizzaClone;
+        GameObject pizzaVisualForResult = readyPizzaClone;
 
         isShowingResult = true;
+
+        StopPatienceTimer();
 
         if (resultPanelManager != null)
         {
@@ -490,26 +553,14 @@ public class RestaurantManager : MonoBehaviour
     {
         if (correct)
         {
-            score += correctPizzaPoints;
-
-            Debug.Log(
-                "Pizza corretta! +" +
-                correctPizzaPoints +
-                " punti"
-            );
+            reputation += correctPizzaReputation;
         }
         else
         {
-            score += wrongPizzaPoints;
-
-            Debug.Log(
-                "Pizza sbagliata! +" +
-                wrongPizzaPoints +
-                " punti"
-            );
+            reputation += wrongPizzaReputation;
         }
 
-        UpdateScoreText();
+        UpdateReputationText();
 
         ClearReadyPizzaVisual();
 
@@ -537,13 +588,13 @@ public class RestaurantManager : MonoBehaviour
             activeCustomers.Contains(customer))
         {
             activeCustomers.Remove(customer);
-
             customer.LeaveRestaurant(spawnPoint);
-
             UpdateCustomerSlots();
         }
 
         isShowingResult = false;
+
+        TryShowOpenButtonAfterDayEnd();
     }
 
     Sprite GetCustomerSprite(CustomerMover customer)
@@ -569,9 +620,7 @@ public class RestaurantManager : MonoBehaviour
         }
 
         if (readyPizzaContainer != null)
-        {
             readyPizzaContainer.gameObject.SetActive(false);
-        }
     }
 
     void DisableRaycasts(GameObject target)
@@ -593,33 +642,24 @@ public class RestaurantManager : MonoBehaviour
         if (!PizzaRuntimeData.pizzaReady)
             return false;
 
-        if (currentOrder.sugoPomodoro !=
-            PizzaRuntimeData.hasSugo)
+        if (currentOrder.sugoPomodoro != PizzaRuntimeData.hasSugo)
             return false;
 
-        if (currentOrder.mozzarella !=
-            PizzaRuntimeData.hasMozzarella)
+        if (currentOrder.mozzarella != PizzaRuntimeData.hasMozzarella)
             return false;
 
-        if (currentOrder.tonno !=
-            PizzaRuntimeData.hasTonno)
+        if (currentOrder.tonno != PizzaRuntimeData.hasTonno)
             return false;
 
-        if (currentOrder.cipolla !=
-            PizzaRuntimeData.hasCipolla)
+        if (currentOrder.cipolla != PizzaRuntimeData.hasCipolla)
             return false;
 
         bool bakeCorrect =
             currentOrder.mediumBake
-            ? PizzaRuntimeData.bakeState ==
-              "Cottura media"
-            : PizzaRuntimeData.bakeState ==
-              "Ben cotta";
+            ? PizzaRuntimeData.bakeState == "Cottura media"
+            : PizzaRuntimeData.bakeState == "Ben cotta";
 
-        if (!bakeCorrect)
-            return false;
-
-        return true;
+        return bakeCorrect;
     }
 
     public void DebugServeFirstCustomer()
@@ -647,24 +687,22 @@ public class RestaurantManager : MonoBehaviour
                 orderRevealRoutine = null;
             }
 
+            StopPatienceTimer();
+
             customer.LeaveRestaurant(spawnPoint);
 
             UpdateCustomerSlots();
-        }
-    }
 
-    void UpdateScoreText()
-    {
-        if (scoreText != null)
-        {
-            scoreText.text =
-                "Punti: " + score;
+            TryShowOpenButtonAfterDayEnd();
         }
     }
 
     void CloseRestaurantAutomatically()
     {
         isOpen = false;
+        dayEndedWaitingForNextDay = true;
+
+        PlaySFX(dayEndClip, dayEndVolume);
 
         if (spawnRoutine != null)
         {
@@ -678,7 +716,59 @@ public class RestaurantManager : MonoBehaviour
             clockRoutine = null;
         }
 
-        ResetRestaurant();
+        StopPatienceTimer();
+
+        for (int i = activeCustomers.Count - 1; i >= 1; i--)
+        {
+            CustomerMover customer = activeCustomers[i];
+
+            activeCustomers.RemoveAt(i);
+
+            if (customer != null)
+                customer.LeaveRestaurant(spawnPoint);
+        }
+
+        UpdateCustomerSlots();
+
+        if (activeCustomers.Count == 0)
+        {
+            TryShowOpenButtonAfterDayEnd();
+        }
+        else
+        {
+            if (openRestaurantButton != null)
+                openRestaurantButton.SetActive(false);
+
+            if (buttonText != null)
+                buttonText.text = "Completa ultimo ordine";
+        }
+    }
+
+    void TryShowOpenButtonAfterDayEnd()
+    {
+        if (!dayEndedWaitingForNextDay)
+            return;
+
+        if (activeCustomers.Count > 0)
+            return;
+
+        if (openRestaurantButton != null)
+            openRestaurantButton.SetActive(true);
+
+        if (buttonText != null)
+            buttonText.text = "Apri pizzeria";
+    }
+
+    void UpdateReputationText()
+    {
+        if (reputationText != null)
+            reputationText.text = "Reputazione: " + reputation;
+    }
+
+    void UpdateDayText()
+    {
+        if (dayText != null)
+            dayText.text = "GIORNO " + currentDay;
     }
 
     void ResetRestaurant()
@@ -693,6 +783,23 @@ public class RestaurantManager : MonoBehaviour
 
         if (buttonText != null)
             buttonText.text = "Apri pizzeria";
+    }
+
+    void PlaySFX(AudioClip clip, float volume)
+    {
+        if (clip == null)
+            return;
+
+        if (AudioManager.Instance == null)
+            return;
+
+        if (AudioManager.Instance.sfxSource == null)
+            return;
+
+        AudioManager.Instance.sfxSource.PlayOneShot(
+            clip,
+            volume
+        );
     }
 
     private class OrderIngredientVisual
