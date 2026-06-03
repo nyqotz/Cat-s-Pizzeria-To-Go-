@@ -16,6 +16,13 @@ public class RestaurantManager : MonoBehaviour
     public CustomerSlot[] customerSlots;
 
     public GameObject orderBubble;
+    public Image ingredientImage;
+
+    public Sprite sugoSprite;
+    public Sprite mozzarellaSprite;
+    public Sprite tonnoSprite;
+    public Sprite cipollaSprite;
+
     public GameObject orderTicket;
 
     public TMP_Text ticketTitle;
@@ -25,14 +32,25 @@ public class RestaurantManager : MonoBehaviour
     public RectTransform readyPizzaContainer;
     public Vector2 readyPizzaSize = new Vector2(180f, 180f);
 
+    public TMP_Text scoreText;
+    public int correctPizzaPoints = 100;
+    public int wrongPizzaPoints = 30;
+
+    public ResultPanelManager resultPanelManager;
+
     public float minSpawnTime = 2f;
     public float maxSpawnTime = 6f;
     public float gameplayDuration = 180f;
 
+    public float orderIngredientDelay = 0.75f;
+    public float lastIngredientHoldTime = 0.75f;
+
     private bool isOpen = false;
+    private bool isShowingResult = false;
 
     private Coroutine spawnRoutine;
     private Coroutine clockRoutine;
+    private Coroutine orderRevealRoutine;
 
     private List<CustomerMover> activeCustomers =
         new List<CustomerMover>();
@@ -42,6 +60,7 @@ public class RestaurantManager : MonoBehaviour
     private PizzaOrder currentOrder;
 
     private int orderNumber = 0;
+    private int score = 0;
 
     private GameObject readyPizzaClone;
 
@@ -52,7 +71,13 @@ public class RestaurantManager : MonoBehaviour
         if (orderTicket != null)
             orderTicket.SetActive(false);
 
+        if (orderBubble != null)
+            orderBubble.SetActive(false);
+
+        HideBubbleIngredient();
+
         ClearReadyPizzaVisual();
+        UpdateScoreText();
     }
 
     public void OpenRestaurant()
@@ -187,6 +212,12 @@ public class RestaurantManager : MonoBehaviour
 
     public void GenerateRandomOrder()
     {
+        if (orderRevealRoutine != null)
+        {
+            StopCoroutine(orderRevealRoutine);
+            orderRevealRoutine = null;
+        }
+
         orderNumber++;
 
         currentOrder = new PizzaOrder();
@@ -197,28 +228,11 @@ public class RestaurantManager : MonoBehaviour
         currentOrder.cipolla = Random.value > 0.5f;
         currentOrder.mediumBake = Random.value > 0.5f;
 
-        string ingredients = "";
-
-        if (currentOrder.sugoPomodoro)
-            ingredients += "• Sugo di pomodoro\n";
-
-        if (currentOrder.mozzarella)
-            ingredients += "• Mozzarella\n";
-
-        if (currentOrder.tonno)
-            ingredients += "• Tonno\n";
-
-        if (currentOrder.cipolla)
-            ingredients += "• Cipolla\n";
-
-        if (ingredients == "")
-            ingredients = "• Margherita semplice\n";
-
         if (ticketTitle != null)
             ticketTitle.text = "ORDINE #" + orderNumber;
 
         if (ingredientsText != null)
-            ingredientsText.text = ingredients;
+            ingredientsText.text = "";
 
         if (bakeText != null)
         {
@@ -230,6 +244,122 @@ public class RestaurantManager : MonoBehaviour
 
         if (orderTicket != null)
             orderTicket.SetActive(true);
+
+        if (orderBubble != null)
+            orderBubble.SetActive(true);
+
+        HideBubbleIngredient();
+
+        orderRevealRoutine =
+            StartCoroutine(RevealOrderIngredients());
+    }
+
+    IEnumerator RevealOrderIngredients()
+    {
+        string ticketIngredients = "";
+
+        List<OrderIngredientVisual> ingredients =
+            GetRequestedIngredientVisuals();
+
+        if (ingredients.Count == 0)
+        {
+            yield return new WaitForSeconds(orderIngredientDelay);
+
+            ticketIngredients = "• Margherita semplice\n";
+
+            if (ingredientsText != null)
+                ingredientsText.text = ticketIngredients;
+
+            HideBubbleIngredient();
+            yield break;
+        }
+
+        for (int i = 0; i < ingredients.Count; i++)
+        {
+            ShowBubbleIngredient(ingredients[i].sprite);
+
+            ticketIngredients +=
+                "• " + ingredients[i].displayName + "\n";
+
+            if (ingredientsText != null)
+                ingredientsText.text = ticketIngredients;
+
+            yield return new WaitForSeconds(orderIngredientDelay);
+        }
+
+        yield return new WaitForSeconds(lastIngredientHoldTime);
+
+        HideBubbleIngredient();
+    }
+
+    List<OrderIngredientVisual> GetRequestedIngredientVisuals()
+    {
+        List<OrderIngredientVisual> result =
+            new List<OrderIngredientVisual>();
+
+        if (currentOrder == null)
+            return result;
+
+        if (currentOrder.sugoPomodoro)
+        {
+            result.Add(
+                new OrderIngredientVisual(
+                    "Sugo di pomodoro",
+                    sugoSprite
+                )
+            );
+        }
+
+        if (currentOrder.mozzarella)
+        {
+            result.Add(
+                new OrderIngredientVisual(
+                    "Mozzarella",
+                    mozzarellaSprite
+                )
+            );
+        }
+
+        if (currentOrder.tonno)
+        {
+            result.Add(
+                new OrderIngredientVisual(
+                    "Tonno",
+                    tonnoSprite
+                )
+            );
+        }
+
+        if (currentOrder.cipolla)
+        {
+            result.Add(
+                new OrderIngredientVisual(
+                    "Cipolla",
+                    cipollaSprite
+                )
+            );
+        }
+
+        return result;
+    }
+
+    void ShowBubbleIngredient(Sprite sprite)
+    {
+        if (ingredientImage == null)
+            return;
+
+        ingredientImage.sprite = sprite;
+        ingredientImage.preserveAspect = true;
+        ingredientImage.gameObject.SetActive(sprite != null);
+    }
+
+    void HideBubbleIngredient()
+    {
+        if (ingredientImage == null)
+            return;
+
+        ingredientImage.sprite = null;
+        ingredientImage.gameObject.SetActive(false);
     }
 
     public void ReceiveReadyPizzaVisual(GameObject pizzaVisual)
@@ -299,8 +429,135 @@ public class RestaurantManager : MonoBehaviour
 
         DisableRaycasts(readyPizzaClone);
 
-        readyPizzaContainer.gameObject
-            .SetActive(true);
+        readyPizzaContainer.gameObject.SetActive(true);
+
+        ReadyPizzaDragger dragger =
+            readyPizzaContainer.GetComponent<ReadyPizzaDragger>();
+
+        if (dragger != null)
+            dragger.ResetDrag();
+    }
+
+    public void DeliverReadyPizzaToCustomer()
+    {
+        if (isShowingResult)
+            return;
+
+        if (activeCustomers.Count == 0)
+            return;
+
+        if (!PizzaRuntimeData.pizzaReady)
+            return;
+
+        CustomerMover customer =
+            activeCustomers[0];
+
+        bool correct =
+            IsPizzaCorrect();
+
+        Sprite customerSprite =
+            GetCustomerSprite(customer);
+
+        GameObject pizzaVisualForResult =
+            readyPizzaClone;
+
+        isShowingResult = true;
+
+        if (resultPanelManager != null)
+        {
+            resultPanelManager.PlayResult(
+                correct,
+                customerSprite,
+                pizzaVisualForResult,
+                () =>
+                {
+                    PrepareSceneAfterResult(correct);
+                },
+                () =>
+                {
+                    FinishCustomerExit(customer);
+                }
+            );
+        }
+        else
+        {
+            PrepareSceneAfterResult(correct);
+            FinishCustomerExit(customer);
+        }
+    }
+
+    void PrepareSceneAfterResult(bool correct)
+    {
+        if (correct)
+        {
+            score += correctPizzaPoints;
+
+            Debug.Log(
+                "Pizza corretta! +" +
+                correctPizzaPoints +
+                " punti"
+            );
+        }
+        else
+        {
+            score += wrongPizzaPoints;
+
+            Debug.Log(
+                "Pizza sbagliata! +" +
+                wrongPizzaPoints +
+                " punti"
+            );
+        }
+
+        UpdateScoreText();
+
+        ClearReadyPizzaVisual();
+
+        if (orderBubble != null)
+            orderBubble.SetActive(false);
+
+        HideBubbleIngredient();
+
+        if (orderTicket != null)
+            orderTicket.SetActive(false);
+
+        if (orderRevealRoutine != null)
+        {
+            StopCoroutine(orderRevealRoutine);
+            orderRevealRoutine = null;
+        }
+
+        PizzaRuntimeData.ResetPizza();
+        currentOrder = null;
+    }
+
+    void FinishCustomerExit(CustomerMover customer)
+    {
+        if (customer != null &&
+            activeCustomers.Contains(customer))
+        {
+            activeCustomers.Remove(customer);
+
+            customer.LeaveRestaurant(spawnPoint);
+
+            UpdateCustomerSlots();
+        }
+
+        isShowingResult = false;
+    }
+
+    Sprite GetCustomerSprite(CustomerMover customer)
+    {
+        if (customer == null)
+            return null;
+
+        SpriteRenderer spriteRenderer =
+            customer.GetComponentInChildren<SpriteRenderer>();
+
+        if (spriteRenderer == null)
+            return null;
+
+        return spriteRenderer.sprite;
     }
 
     void ClearReadyPizzaVisual()
@@ -313,17 +570,14 @@ public class RestaurantManager : MonoBehaviour
 
         if (readyPizzaContainer != null)
         {
-            readyPizzaContainer.gameObject
-                .SetActive(false);
+            readyPizzaContainer.gameObject.SetActive(false);
         }
     }
 
     void DisableRaycasts(GameObject target)
     {
         Graphic[] graphics =
-            target.GetComponentsInChildren<Graphic>(
-                true
-            );
+            target.GetComponentsInChildren<Graphic>(true);
 
         for (int i = 0; i < graphics.Length; i++)
         {
@@ -370,33 +624,7 @@ public class RestaurantManager : MonoBehaviour
 
     public void DebugServeFirstCustomer()
     {
-        if (activeCustomers.Count == 0)
-            return;
-
-        if (!PizzaRuntimeData.pizzaReady)
-        {
-            Debug.Log(
-                "Non hai ancora una pizza pronta."
-            );
-
-            return;
-        }
-
-        if (!IsPizzaCorrect())
-        {
-            Debug.Log(
-                "Pizza sbagliata! Non corrisponde all'ordine."
-            );
-
-            return;
-        }
-
-        RemoveCustomer(activeCustomers[0]);
-
-        ClearReadyPizzaVisual();
-
-        PizzaRuntimeData.ResetPizza();
-        currentOrder = null;
+        DeliverReadyPizzaToCustomer();
     }
 
     public void RemoveCustomer(CustomerMover customer)
@@ -408,12 +636,29 @@ public class RestaurantManager : MonoBehaviour
             if (orderBubble != null)
                 orderBubble.SetActive(false);
 
+            HideBubbleIngredient();
+
             if (orderTicket != null)
                 orderTicket.SetActive(false);
+
+            if (orderRevealRoutine != null)
+            {
+                StopCoroutine(orderRevealRoutine);
+                orderRevealRoutine = null;
+            }
 
             customer.LeaveRestaurant(spawnPoint);
 
             UpdateCustomerSlots();
+        }
+    }
+
+    void UpdateScoreText()
+    {
+        if (scoreText != null)
+        {
+            scoreText.text =
+                "Punti: " + score;
         }
     }
 
@@ -448,5 +693,20 @@ public class RestaurantManager : MonoBehaviour
 
         if (buttonText != null)
             buttonText.text = "Apri pizzeria";
+    }
+
+    private class OrderIngredientVisual
+    {
+        public string displayName;
+        public Sprite sprite;
+
+        public OrderIngredientVisual(
+            string displayName,
+            Sprite sprite
+        )
+        {
+            this.displayName = displayName;
+            this.sprite = sprite;
+        }
     }
 }
