@@ -104,3 +104,6 @@ InitTestScene*.unity*
 
 # Auto-generated cache in Assets folder
 /[Aa]ssets/[Ss]ceneDependencyCache*
+/[Aa]ssets/GeneratedLocalRepo/
+/[Aa]ssets/Firebase/Plugins/x86_64/FirebaseCppApp-13_11_0.bundle
+/[Aa]ssets/Firebase/Plugins/x86_64/FirebaseCppApp-13_11_0.bundle.meta

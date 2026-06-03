@@ -15,8 +15,9 @@ public class StarReputationUI : MonoBehaviour
     public float popDuration = 0.18f;
 
     private float currentRating = 3f;
+    private Coroutine animationRoutine;
 
-    void Start()
+    private void Start()
     {
         SetRating(currentRating, false);
     }
@@ -29,7 +30,10 @@ public class StarReputationUI : MonoBehaviour
 
         if (animate)
         {
-            StartCoroutine(AnimateStars());
+            if (animationRoutine != null)
+                StopCoroutine(animationRoutine);
+
+            animationRoutine = StartCoroutine(AnimateStars());
         }
     }
 
@@ -38,10 +42,9 @@ public class StarReputationUI : MonoBehaviour
         return currentRating;
     }
 
-    void RefreshStars()
+    private void RefreshStars()
     {
-        bool isPerfect =
-            Mathf.Approximately(currentRating, 5f);
+        bool isPerfect = Mathf.Approximately(currentRating, 5f);
 
         for (int i = 0; i < stars.Length; i++)
         {
@@ -60,10 +63,7 @@ public class StarReputationUI : MonoBehaviour
             {
                 stars[i].sprite = fullStarSprite;
             }
-            else if (
-                currentRating >= starValue - 0.5f &&
-                halfStarSprite != null
-            )
+            else if (currentRating >= starValue - 0.5f && halfStarSprite != null)
             {
                 stars[i].sprite = halfStarSprite;
             }
@@ -71,18 +71,19 @@ public class StarReputationUI : MonoBehaviour
             {
                 stars[i].sprite = emptyStarSprite;
             }
+
+            stars[i].rectTransform.localScale = Vector3.one;
         }
     }
 
-    IEnumerator AnimateStars()
+    private IEnumerator AnimateStars()
     {
         for (int i = 0; i < stars.Length; i++)
         {
             if (stars[i] == null)
                 continue;
 
-            RectTransform rect =
-                stars[i].rectTransform;
+            RectTransform rect = stars[i].rectTransform;
 
             Vector3 normalScale = Vector3.one;
             Vector3 bigScale = Vector3.one * popScale;
@@ -92,15 +93,8 @@ public class StarReputationUI : MonoBehaviour
             while (elapsed < popDuration)
             {
                 elapsed += Time.deltaTime;
-
-                float t =
-                    Mathf.Clamp01(elapsed / popDuration);
-
-                t = Mathf.SmoothStep(0f, 1f, t);
-
-                rect.localScale =
-                    Vector3.Lerp(normalScale, bigScale, t);
-
+                float t = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(elapsed / popDuration));
+                rect.localScale = Vector3.Lerp(normalScale, bigScale, t);
                 yield return null;
             }
 
@@ -109,19 +103,14 @@ public class StarReputationUI : MonoBehaviour
             while (elapsed < popDuration)
             {
                 elapsed += Time.deltaTime;
-
-                float t =
-                    Mathf.Clamp01(elapsed / popDuration);
-
-                t = Mathf.SmoothStep(0f, 1f, t);
-
-                rect.localScale =
-                    Vector3.Lerp(bigScale, normalScale, t);
-
+                float t = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(elapsed / popDuration));
+                rect.localScale = Vector3.Lerp(bigScale, normalScale, t);
                 yield return null;
             }
 
             rect.localScale = normalScale;
         }
+
+        animationRoutine = null;
     }
 }
