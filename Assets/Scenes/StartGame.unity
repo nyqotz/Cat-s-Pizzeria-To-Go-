@@ -2569,7 +2569,7 @@ MonoBehaviour:
   musicSource: {fileID: 1659568962}
   sfxSource: {fileID: 1659568961}
   clickSound: {fileID: 8300000, guid: c377226350c87e440991364d5f699b5f, type: 3}
-  shutterSound: {fileID: 8300000, guid: d438c6ebfc778b24f9eb2f16a80ff65f, type: 3}
+  shutterSound: {fileID: 8300000, guid: 3a8a12dbd53c4e9448083b6d13889d27, type: 3}
   globalSFXMultiplier: 1.5
   buttonClickMultiplier: 2.5
   shutterMultiplier: 1

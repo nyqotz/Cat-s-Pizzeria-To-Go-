@@ -744,6 +744,7 @@ GameObject:
   - component: {fileID: 120653324}
   - component: {fileID: 120653326}
   - component: {fileID: 120653323}
+  - component: {fileID: 120653327}
   m_Layer: 5
   m_Name: BackFromForgotButton
   m_TagString: Untagged
@@ -873,6 +874,18 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &120653327
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 120653321}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 11e9f64adf835c54fad5e9a0866ea085, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIButtonClickSound
 --- !u!1 &208001067
 GameObject:
   m_ObjectHideFlags: 0
@@ -989,7 +1002,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 8, y: -163}
   m_SizeDelta: {x: 1920, y: 1080}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &274760780
@@ -1072,7 +1085,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: -42}
   m_SizeDelta: {x: 1920, y: 1080}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &285784107
@@ -2964,8 +2977,8 @@ MonoBehaviour:
   m_fontSizeMin: 18
   m_fontSizeMax: 72
   m_fontStyle: 0
-  m_HorizontalAlignment: 1
-  m_VerticalAlignment: 256
+  m_HorizontalAlignment: 2
+  m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
   m_characterHorizontalScale: 1
@@ -3531,6 +3544,7 @@ GameObject:
   - component: {fileID: 979312526}
   - component: {fileID: 979312528}
   - component: {fileID: 979312525}
+  - component: {fileID: 979312529}
   m_Layer: 5
   m_Name: SendResetButton
   m_TagString: Untagged
@@ -3660,6 +3674,18 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &979312529
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 979312523}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 11e9f64adf835c54fad5e9a0866ea085, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIButtonClickSound
 --- !u!1 &984534407
 GameObject:
   m_ObjectHideFlags: 0
@@ -4188,6 +4214,7 @@ GameObject:
   - component: {fileID: 1200060269}
   - component: {fileID: 1200060271}
   - component: {fileID: 1200060268}
+  - component: {fileID: 1200060272}
   m_Layer: 5
   m_Name: GoToRegisterButton
   m_TagString: Untagged
@@ -4317,6 +4344,18 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &1200060272
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1200060266}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 11e9f64adf835c54fad5e9a0866ea085, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIButtonClickSound
 --- !u!1 &1266442339
 GameObject:
   m_ObjectHideFlags: 0
@@ -4330,6 +4369,7 @@ GameObject:
   - component: {fileID: 1266442342}
   - component: {fileID: 1266442344}
   - component: {fileID: 1266442341}
+  - component: {fileID: 1266442345}
   m_Layer: 5
   m_Name: RegisterButton
   m_TagString: Untagged
@@ -4459,6 +4499,18 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &1266442345
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1266442339}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 11e9f64adf835c54fad5e9a0866ea085, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIButtonClickSound
 --- !u!1 &1283169474
 GameObject:
   m_ObjectHideFlags: 0
@@ -5807,8 +5859,8 @@ MonoBehaviour:
   m_fontSizeMin: 18
   m_fontSizeMax: 72
   m_fontStyle: 0
-  m_HorizontalAlignment: 1
-  m_VerticalAlignment: 256
+  m_HorizontalAlignment: 2
+  m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
   m_characterHorizontalScale: 1
@@ -5866,6 +5918,7 @@ GameObject:
   - component: {fileID: 1763391151}
   - component: {fileID: 1763391153}
   - component: {fileID: 1763391150}
+  - component: {fileID: 1763391154}
   m_Layer: 5
   m_Name: LoginButton
   m_TagString: Untagged
@@ -5882,7 +5935,7 @@ RectTransform:
   m_GameObject: {fileID: 1763391148}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 2.03, y: 2.03, z: 2.03}
   m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 1314510091}
@@ -5890,8 +5943,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 19, y: -107}
-  m_SizeDelta: {x: 860, y: 105}
+  m_AnchoredPosition: {x: 17, y: -107}
+  m_SizeDelta: {x: 302.306, y: 74.6306}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1763391150
 MonoBehaviour:
@@ -5995,6 +6048,18 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &1763391154
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1763391148}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 11e9f64adf835c54fad5e9a0866ea085, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIButtonClickSound
 --- !u!1 &1769735549
 GameObject:
   m_ObjectHideFlags: 0
@@ -6030,8 +6095,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 700, y: 94}
+  m_AnchoredPosition: {x: 17, y: -3}
+  m_SizeDelta: {x: 473.9517, y: 94}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1769735551
 MonoBehaviour:
@@ -6712,6 +6777,7 @@ GameObject:
   - component: {fileID: 1921885277}
   - component: {fileID: 1921885279}
   - component: {fileID: 1921885276}
+  - component: {fileID: 1921885280}
   m_Layer: 5
   m_Name: BackToLoginButton
   m_TagString: Untagged
@@ -6841,6 +6907,18 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &1921885280
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1921885274}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 11e9f64adf835c54fad5e9a0866ea085, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIButtonClickSound
 --- !u!1 &1939513314
 GameObject:
   m_ObjectHideFlags: 0
@@ -6854,6 +6932,7 @@ GameObject:
   - component: {fileID: 1939513317}
   - component: {fileID: 1939513319}
   - component: {fileID: 1939513316}
+  - component: {fileID: 1939513320}
   m_Layer: 5
   m_Name: ForgotPasswordButton
   m_TagString: Untagged
@@ -6878,7 +6957,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 1157, y: -754}
+  m_AnchoredPosition: {x: 1157, y: -751.5}
   m_SizeDelta: {x: 200, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1939513316
@@ -6983,6 +7062,18 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &1939513320
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1939513314}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 11e9f64adf835c54fad5e9a0866ea085, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIButtonClickSound
 --- !u!1 &2013294454
 GameObject:
   m_ObjectHideFlags: 0

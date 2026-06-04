@@ -30,6 +30,7 @@ public class ResultPanelManager : MonoBehaviour
     public float slideDuration = 0.8f;
     public float drumRollDuration = 4f;
     public float resultHoldDuration = 3f;
+    public float audioGapAfterDrumRoll = 0.15f;
 
     [Header("Slide Settings")]
     public float slideOffsetX = 2500f;
@@ -132,6 +133,8 @@ public class ResultPanelManager : MonoBehaviour
 
         StopResultAudio();
 
+        yield return new WaitForSeconds(audioGapAfterDrumRoll);
+
         if (isCorrect)
         {
             ShowSuccess();
@@ -147,6 +150,8 @@ public class ResultPanelManager : MonoBehaviour
             resultContentOriginalPosition,
             resultContentOriginalPosition + new Vector2(-slideOffsetX, 0f)
         );
+
+        StopResultAudio();
 
         if (onBlackScreenBeforeReturn != null)
             onBlackScreenBeforeReturn.Invoke();
@@ -416,8 +421,8 @@ public class ResultPanelManager : MonoBehaviour
             return;
 
         resultAudioSource.Stop();
-        resultAudioSource.clip = drumRollClip;
         resultAudioSource.loop = true;
+        resultAudioSource.clip = drumRollClip;
         resultAudioSource.Play();
     }
 
@@ -426,7 +431,10 @@ public class ResultPanelManager : MonoBehaviour
         if (resultAudioSource == null || clip == null)
             return;
 
-        resultAudioSource.PlayOneShot(clip, 1f);
+        resultAudioSource.Stop();
+        resultAudioSource.loop = false;
+        resultAudioSource.clip = clip;
+        resultAudioSource.Play();
     }
 
     void StopResultAudio()

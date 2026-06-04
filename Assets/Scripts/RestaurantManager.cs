@@ -42,6 +42,7 @@ public class RestaurantManager : MonoBehaviour
     public float customerPatienceTime = 40f;
 
     public ResultPanelManager resultPanelManager;
+    public DaySummaryPanelManager daySummaryPanelManager;
 
     public AudioClip doorBellClip;
     public AudioClip dayEndClip;
@@ -58,6 +59,7 @@ public class RestaurantManager : MonoBehaviour
     private bool isOpen = false;
     private bool isShowingResult = false;
     private bool dayEndedWaitingForNextDay = false;
+    private bool summaryShown = false;
 
     private Coroutine spawnRoutine;
     private Coroutine clockRoutine;
@@ -73,6 +75,10 @@ public class RestaurantManager : MonoBehaviour
     private int orderNumber = 0;
     private int currentDay = 1;
     private float starRating = 3f;
+
+    private int dailyServedCustomers = 0;
+    private int dailyPerfectPizzas = 0;
+    private int dailyWrongPizzas = 0;
 
     private GameObject readyPizzaClone;
 
@@ -110,12 +116,18 @@ public class RestaurantManager : MonoBehaviour
         {
             currentDay++;
             dayEndedWaitingForNextDay = false;
+            summaryShown = false;
             UpdateDayText();
         }
 
         isOpen = true;
         orderNumber = 0;
         lastCustomerIndex = -1;
+
+        dailyServedCustomers = 0;
+        dailyPerfectPizzas = 0;
+        dailyWrongPizzas = 0;
+        summaryShown = false;
 
         if (clockText != null)
             clockText.text = "12:00";
@@ -335,7 +347,7 @@ public class RestaurantManager : MonoBehaviour
         {
             yield return new WaitForSeconds(orderIngredientDelay);
 
-            ticketIngredients = "• Margherita semplice\n";
+            ticketIngredients = "• Focaccia semplice\n";
 
             if (ingredientsText != null)
                 ingredientsText.text = ticketIngredients;
@@ -473,7 +485,7 @@ public class RestaurantManager : MonoBehaviour
             UpdateCustomerSlots();
         }
 
-        TryShowOpenButtonAfterDayEnd();
+        TryShowDaySummaryAfterDayEnd();
     }
 
     public void ReceiveReadyPizzaVisual(GameObject pizzaVisual)
@@ -578,10 +590,18 @@ public class RestaurantManager : MonoBehaviour
 
     void PrepareSceneAfterResult(bool correct)
     {
+        dailyServedCustomers++;
+
         if (correct)
+        {
+            dailyPerfectPizzas++;
             ChangeStars(correctPizzaStars);
+        }
         else
+        {
+            dailyWrongPizzas++;
             ChangeStars(wrongPizzaStars);
+        }
 
         ClearReadyPizzaVisual();
 
@@ -615,7 +635,7 @@ public class RestaurantManager : MonoBehaviour
 
         isShowingResult = false;
 
-        TryShowOpenButtonAfterDayEnd();
+        TryShowDaySummaryAfterDayEnd();
     }
 
     Sprite GetCustomerSprite(CustomerMover customer)
@@ -712,7 +732,7 @@ public class RestaurantManager : MonoBehaviour
 
             UpdateCustomerSlots();
 
-            TryShowOpenButtonAfterDayEnd();
+            TryShowDaySummaryAfterDayEnd();
         }
     }
 
@@ -751,7 +771,7 @@ public class RestaurantManager : MonoBehaviour
 
         if (activeCustomers.Count == 0)
         {
-            TryShowOpenButtonAfterDayEnd();
+            TryShowDaySummaryAfterDayEnd();
         }
         else
         {
@@ -763,14 +783,39 @@ public class RestaurantManager : MonoBehaviour
         }
     }
 
-    void TryShowOpenButtonAfterDayEnd()
+    void TryShowDaySummaryAfterDayEnd()
     {
         if (!dayEndedWaitingForNextDay)
+            return;
+
+        if (summaryShown)
             return;
 
         if (activeCustomers.Count > 0)
             return;
 
+        summaryShown = true;
+
+        if (openRestaurantButton != null)
+            openRestaurantButton.SetActive(false);
+
+        if (daySummaryPanelManager != null)
+        {
+            daySummaryPanelManager.ShowSummary(
+                dailyServedCustomers,
+                dailyPerfectPizzas,
+                dailyWrongPizzas,
+                this
+            );
+        }
+        else
+        {
+            ConfirmDaySummary();
+        }
+    }
+
+    public void ConfirmDaySummary()
+    {
         if (openRestaurantButton != null)
             openRestaurantButton.SetActive(true);
 

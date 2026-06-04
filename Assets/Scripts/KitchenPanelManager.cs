@@ -5,6 +5,7 @@ using UnityEngine.SceneManagement;
 public class KitchenPanelManager : MonoBehaviour
 {
     public GameObject kitchenHub;
+    public GameObject backToMainButton;
 
     public RectTransform doughPanel;
     public RectTransform ingredientsPanel;
@@ -27,6 +28,9 @@ public class KitchenPanelManager : MonoBehaviour
     {
         panelOpen = false;
         currentPanel = null;
+
+        if (backToMainButton != null)
+            backToMainButton.SetActive(true);
 
         if (kitchenHub != null)
             kitchenHub.SetActive(true);
@@ -65,6 +69,9 @@ public class KitchenPanelManager : MonoBehaviour
             return;
 
         PlayClick();
+
+        if (backToMainButton != null)
+            backToMainButton.SetActive(false);
 
         if (kitchenHub != null)
             kitchenHub.SetActive(false);
@@ -144,6 +151,9 @@ public class KitchenPanelManager : MonoBehaviour
             return;
 
         PlayClick();
+
+        if (backToMainButton != null)
+            backToMainButton.SetActive(false);
 
         StartCoroutine(
             SlideAnimation(nextPanel, direction)
