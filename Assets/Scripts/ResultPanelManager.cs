@@ -79,6 +79,8 @@ public class ResultPanelManager : MonoBehaviour
     )
     {
         StopAllCoroutines();
+        StopDrumRoll();
+
         gameObject.SetActive(true);
 
         StartCoroutine(
@@ -114,9 +116,11 @@ public class ResultPanelManager : MonoBehaviour
             resultContentOriginalPosition
         );
 
-        PlaySFX(drumRollClip);
+        PlayDrumRoll();
 
         yield return new WaitForSeconds(drumRollDuration);
+
+        StopDrumRoll();
 
         if (isCorrect)
         {
@@ -141,6 +145,7 @@ public class ResultPanelManager : MonoBehaviour
 
         ClearPizza();
 
+        StopDrumRoll();
         ResumeGameMusic();
 
         gameObject.SetActive(false);
@@ -407,6 +412,38 @@ public class ResultPanelManager : MonoBehaviour
         }
 
         rect.localRotation = Quaternion.identity;
+    }
+
+    void PlayDrumRoll()
+    {
+        if (drumRollClip == null)
+            return;
+
+        if (AudioManager.Instance == null)
+            return;
+
+        if (AudioManager.Instance.sfxSource == null)
+            return;
+
+        AudioManager.Instance.sfxSource.clip = drumRollClip;
+        AudioManager.Instance.sfxSource.loop = true;
+        AudioManager.Instance.sfxSource.Play();
+    }
+
+    void StopDrumRoll()
+    {
+        if (AudioManager.Instance == null)
+            return;
+
+        if (AudioManager.Instance.sfxSource == null)
+            return;
+
+        if (AudioManager.Instance.sfxSource.clip == drumRollClip)
+        {
+            AudioManager.Instance.sfxSource.Stop();
+            AudioManager.Instance.sfxSource.loop = false;
+            AudioManager.Instance.sfxSource.clip = null;
+        }
     }
 
     void PauseGameMusic()
