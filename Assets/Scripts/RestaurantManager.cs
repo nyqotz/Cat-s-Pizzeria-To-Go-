@@ -242,7 +242,41 @@ public class RestaurantManager : MonoBehaviour
             activeCustomers[i].SetSlot(customerSlots[i]);
     }
 
+    public bool CanCustomerOrder(CustomerMover customer)
+    {
+        if (customer == null)
+            return false;
+
+        if (isShowingResult)
+            return false;
+
+        if (currentOrder != null)
+            return false;
+
+        if (activeCustomers.Count == 0)
+            return false;
+
+        return activeCustomers[0] == customer;
+    }
+
+    public bool GenerateRandomOrder(CustomerMover customer)
+    {
+        if (!CanCustomerOrder(customer))
+            return false;
+
+        GenerateRandomOrderInternal();
+        return true;
+    }
+
     public void GenerateRandomOrder()
+    {
+        if (activeCustomers.Count == 0)
+            return;
+
+        GenerateRandomOrder(activeCustomers[0]);
+    }
+
+    void GenerateRandomOrderInternal()
     {
         if (orderRevealRoutine != null)
         {

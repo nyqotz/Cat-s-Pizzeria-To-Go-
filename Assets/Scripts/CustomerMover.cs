@@ -46,7 +46,7 @@ public class CustomerMover : MonoBehaviour
             * walkRotationAmount;
 
         transform.rotation =
-            Quaternion.Euler(0,0,angle);
+            Quaternion.Euler(0, 0, angle);
 
         if (Vector2.Distance(
             transform.position,
@@ -159,11 +159,27 @@ public class CustomerMover : MonoBehaviour
         )
             return;
 
+        RestaurantManager rm =
+            FindAnyObjectByType<RestaurantManager>();
+
+        if (rm == null)
+            return;
+
+        if (!rm.CanCustomerOrder(this))
+            return;
+
+        bool orderAccepted =
+            rm.GenerateRandomOrder(this);
+
+        if (!orderAccepted)
+            return;
+
         orderTaken = true;
 
         if (
             AudioManager.Instance != null
             && customerAudio != null
+            && AudioManager.Instance.sfxSource != null
         )
         {
             AudioManager.Instance
@@ -171,14 +187,6 @@ public class CustomerMover : MonoBehaviour
                 .PlayOneShot(
                     customerAudio
                 );
-        }
-
-        RestaurantManager rm =
-            FindAnyObjectByType<RestaurantManager>();
-
-        if (rm != null)
-        {
-            rm.GenerateRandomOrder();
         }
 
         SetUIPosition(

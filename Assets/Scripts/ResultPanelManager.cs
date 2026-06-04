@@ -40,6 +40,7 @@ public class ResultPanelManager : MonoBehaviour
     public float angryShakeAngle = 8f;
 
     private GameObject pizzaClone;
+    private AudioSource resultAudioSource;
 
     private Vector2 resultContentOriginalPosition;
     private Vector2 customerOriginalPosition;
@@ -50,6 +51,15 @@ public class ResultPanelManager : MonoBehaviour
     void Awake()
     {
         SaveOriginalPositions();
+
+        resultAudioSource = GetComponent<AudioSource>();
+
+        if (resultAudioSource == null)
+            resultAudioSource = gameObject.AddComponent<AudioSource>();
+
+        resultAudioSource.playOnAwake = false;
+        resultAudioSource.loop = false;
+        resultAudioSource.spatialBlend = 0f;
     }
 
     void SaveOriginalPositions()
@@ -79,7 +89,7 @@ public class ResultPanelManager : MonoBehaviour
     )
     {
         StopAllCoroutines();
-        StopDrumRoll();
+        StopResultAudio();
 
         gameObject.SetActive(true);
 
@@ -120,7 +130,7 @@ public class ResultPanelManager : MonoBehaviour
 
         yield return new WaitForSeconds(drumRollDuration);
 
-        StopDrumRoll();
+        StopResultAudio();
 
         if (isCorrect)
         {
@@ -144,16 +154,13 @@ public class ResultPanelManager : MonoBehaviour
         yield return FadeOverlay(1f, 0f, returnFadeDuration);
 
         ClearPizza();
-
-        StopDrumRoll();
+        StopResultAudio();
         ResumeGameMusic();
-
-        gameObject.SetActive(false);
-
-        yield return new WaitForSeconds(0.1f);
 
         if (onFinishedAfterFadeIn != null)
             onFinishedAfterFadeIn.Invoke();
+
+        gameObject.SetActive(false);
     }
 
     void PrepareInitialState()
@@ -226,16 +233,10 @@ public class ResultPanelManager : MonoBehaviour
         if (pizzaVisual == null || pizzaResultContainer == null)
             return;
 
-        pizzaClone = Instantiate(
-            pizzaVisual,
-            pizzaResultContainer,
-            false
-        );
-
+        pizzaClone = Instantiate(pizzaVisual, pizzaResultContainer, false);
         pizzaClone.name = "ResultPizzaVisual";
 
-        Canvas[] canvases =
-            pizzaClone.GetComponentsInChildren<Canvas>(true);
+        Canvas[] canvases = pizzaClone.GetComponentsInChildren<Canvas>(true);
 
         for (int i = 0; i < canvases.Length; i++)
             Destroy(canvases[i]);
@@ -246,8 +247,7 @@ public class ResultPanelManager : MonoBehaviour
         for (int i = 0; i < raycasters.Length; i++)
             Destroy(raycasters[i]);
 
-        RectTransform pizzaRect =
-            pizzaClone.GetComponent<RectTransform>();
+        RectTransform pizzaRect = pizzaClone.GetComponent<RectTransform>();
 
         if (pizzaRect != null)
         {
@@ -272,8 +272,7 @@ public class ResultPanelManager : MonoBehaviour
             pizzaRect.localScale = new Vector3(scaleX, scaleY, 1f);
         }
 
-        Image[] pizzaImages =
-            pizzaClone.GetComponentsInChildren<Image>(true);
+        Image[] pizzaImages = pizzaClone.GetComponentsInChildren<Image>(true);
 
         for (int i = 0; i < pizzaImages.Length; i++)
         {
@@ -325,8 +324,7 @@ public class ResultPanelManager : MonoBehaviour
             float t = Mathf.Clamp01(elapsed / slideDuration);
             t = Mathf.SmoothStep(0f, 1f, t);
 
-            resultContent.anchoredPosition =
-                Vector2.Lerp(from, to, t);
+            resultContent.anchoredPosition = Vector2.Lerp(from, to, t);
 
             yield return null;
         }
@@ -339,7 +337,7 @@ public class ResultPanelManager : MonoBehaviour
         if (resultText != null)
             resultText.text = "PERFETTA!";
 
-        PlaySFX(victoryClip);
+        PlayResultSFX(victoryClip);
 
         if (thumbImage != null)
         {
@@ -353,13 +351,13 @@ public class ResultPanelManager : MonoBehaviour
         if (resultText != null)
             resultText.text = "BLEEH!";
 
-        PlaySFX(failClip);
+        PlayResultSFX(failClip);
 
         StartCoroutine(ShakeCustomer());
 
         yield return new WaitForSeconds(0.5f);
 
-        PlaySFX(metalClip);
+        PlayResultSFX(metalClip);
     }
 
     IEnumerator PopThumb()
@@ -379,8 +377,7 @@ public class ResultPanelManager : MonoBehaviour
             float t = Mathf.Clamp01(elapsed / duration);
             t = Mathf.SmoothStep(0f, 1f, t);
 
-            rect.localScale =
-                Vector3.Lerp(Vector3.zero, Vector3.one, t);
+            rect.localScale = Vector3.Lerp(Vector3.zero, Vector3.one, t);
 
             yield return null;
         }
@@ -405,8 +402,7 @@ public class ResultPanelManager : MonoBehaviour
                 Mathf.Sin(elapsed * angryShakeSpeed) *
                 angryShakeAngle;
 
-            rect.localRotation =
-                Quaternion.Euler(0f, 0f, angle);
+            rect.localRotation = Quaternion.Euler(0f, 0f, angle);
 
             yield return null;
         }
@@ -416,34 +412,31 @@ public class ResultPanelManager : MonoBehaviour
 
     void PlayDrumRoll()
     {
-        if (drumRollClip == null)
+        if (resultAudioSource == null || drumRollClip == null)
             return;
 
-        if (AudioManager.Instance == null)
-            return;
-
-        if (AudioManager.Instance.sfxSource == null)
-            return;
-
-        AudioManager.Instance.sfxSource.clip = drumRollClip;
-        AudioManager.Instance.sfxSource.loop = true;
-        AudioManager.Instance.sfxSource.Play();
+        resultAudioSource.Stop();
+        resultAudioSource.clip = drumRollClip;
+        resultAudioSource.loop = true;
+        resultAudioSource.Play();
     }
 
-    void StopDrumRoll()
+    void PlayResultSFX(AudioClip clip)
     {
-        if (AudioManager.Instance == null)
+        if (resultAudioSource == null || clip == null)
             return;
 
-        if (AudioManager.Instance.sfxSource == null)
+        resultAudioSource.PlayOneShot(clip, 1f);
+    }
+
+    void StopResultAudio()
+    {
+        if (resultAudioSource == null)
             return;
 
-        if (AudioManager.Instance.sfxSource.clip == drumRollClip)
-        {
-            AudioManager.Instance.sfxSource.Stop();
-            AudioManager.Instance.sfxSource.loop = false;
-            AudioManager.Instance.sfxSource.clip = null;
-        }
+        resultAudioSource.Stop();
+        resultAudioSource.loop = false;
+        resultAudioSource.clip = null;
     }
 
     void PauseGameMusic()
@@ -468,20 +461,6 @@ public class ResultPanelManager : MonoBehaviour
         AudioManager.Instance.musicSource.UnPause();
     }
 
-    void PlaySFX(AudioClip clip)
-    {
-        if (clip == null)
-            return;
-
-        if (AudioManager.Instance == null)
-            return;
-
-        if (AudioManager.Instance.sfxSource == null)
-            return;
-
-        AudioManager.Instance.sfxSource.PlayOneShot(clip, 2f);
-    }
-
     void ClearPizza()
     {
         if (pizzaClone != null)
@@ -493,8 +472,7 @@ public class ResultPanelManager : MonoBehaviour
 
     void DisableRaycasts(GameObject target)
     {
-        Graphic[] graphics =
-            target.GetComponentsInChildren<Graphic>(true);
+        Graphic[] graphics = target.GetComponentsInChildren<Graphic>(true);
 
         for (int i = 0; i < graphics.Length; i++)
             graphics[i].raycastTarget = false;
