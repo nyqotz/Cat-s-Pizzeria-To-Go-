@@ -2568,6 +2568,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::AudioManager
   musicSource: {fileID: 1659568962}
   sfxSource: {fileID: 1659568961}
+  menuMusic: {fileID: 8300000, guid: 6d176bc05abf74b4a905ffd3fcf452b8, type: 3}
+  gameplayMusic: {fileID: 8300000, guid: 7586b72fded55ea4087034fc089349ee, type: 3}
   clickSound: {fileID: 8300000, guid: c377226350c87e440991364d5f699b5f, type: 3}
   shutterSound: {fileID: 8300000, guid: 3a8a12dbd53c4e9448083b6d13889d27, type: 3}
   globalSFXMultiplier: 1.5

@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using System.Collections;
 
 public class AudioManager : MonoBehaviour
@@ -8,6 +9,10 @@ public class AudioManager : MonoBehaviour
     [Header("Audio Sources")]
     public AudioSource musicSource;
     public AudioSource sfxSource;
+
+    [Header("Music Clips")]
+    public AudioClip menuMusic;
+    public AudioClip gameplayMusic;
 
     [Header("Audio Clips")]
     public AudioClip clickSound;
@@ -31,11 +36,71 @@ public class AudioManager : MonoBehaviour
         {
             Instance = this;
             DontDestroyOnLoad(gameObject);
+
+            SceneManager.sceneLoaded += OnSceneLoaded;
         }
         else
         {
             Destroy(gameObject);
         }
+    }
+
+    void OnDestroy()
+    {
+        if (Instance == this)
+        {
+            SceneManager.sceneLoaded -= OnSceneLoaded;
+        }
+    }
+
+    void Start()
+    {
+        UpdateMusicForScene(
+            SceneManager.GetActiveScene().name
+        );
+    }
+
+    void OnSceneLoaded(
+        Scene scene,
+        LoadSceneMode mode
+    )
+    {
+        if (scene.name == "KitchenScene")
+            return;
+
+        UpdateMusicForScene(scene.name);
+    }
+
+    void UpdateMusicForScene(string sceneName)
+    {
+        AudioClip targetClip = null;
+
+        if (
+            sceneName == "StartScene" ||
+            sceneName == "StartGameScene" ||
+            sceneName == "StartGame" ||
+            sceneName == "LoginScene"
+        )
+        {
+            targetClip = menuMusic;
+        }
+        else if (sceneName == "MainScene")
+        {
+            targetClip = gameplayMusic;
+        }
+
+        if (targetClip == null)
+            return;
+
+        if (musicSource == null)
+            return;
+
+        if (musicSource.clip == targetClip && musicSource.isPlaying)
+            return;
+
+        musicSource.clip = targetClip;
+        musicSource.loop = true;
+        musicSource.Play();
     }
 
     public void SetMusicVolume(float value)
@@ -66,7 +131,8 @@ public class AudioManager : MonoBehaviour
         if (shutterRoutine != null)
             StopCoroutine(shutterRoutine);
 
-        shutterRoutine = StartCoroutine(PlayShortShutter());
+        shutterRoutine =
+            StartCoroutine(PlayShortShutter());
     }
 
     IEnumerator PlayShortShutter()

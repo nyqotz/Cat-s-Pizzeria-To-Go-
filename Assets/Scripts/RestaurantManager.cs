@@ -784,38 +784,102 @@ public class RestaurantManager : MonoBehaviour
     }
 
     void TryShowDaySummaryAfterDayEnd()
+{
+    if (!dayEndedWaitingForNextDay)
+        return;
+
+    if (summaryShown)
+        return;
+
+    if (activeCustomers.Count > 0)
+        return;
+
+    summaryShown = true;
+
+    if (openRestaurantButton != null)
+        openRestaurantButton.SetActive(false);
+
+    if (daySummaryPanelManager != null)
     {
-        if (!dayEndedWaitingForNextDay)
-            return;
-
-        if (summaryShown)
-            return;
-
-        if (activeCustomers.Count > 0)
-            return;
-
-        summaryShown = true;
-
-        if (openRestaurantButton != null)
-            openRestaurantButton.SetActive(false);
-
-        if (daySummaryPanelManager != null)
-        {
-            daySummaryPanelManager.ShowSummary(
-                dailyServedCustomers,
-                dailyPerfectPizzas,
-                dailyWrongPizzas,
-                this
-            );
-        }
-        else
-        {
-            ConfirmDaySummary();
-        }
+        daySummaryPanelManager.ShowSummary(
+            dailyServedCustomers,
+            dailyPerfectPizzas,
+            dailyWrongPizzas,
+            this
+        );
     }
+    else
+    {
+        ConfirmDaySummary();
+    }
+}
 
     public void ConfirmDaySummary()
     {
+        if (openRestaurantButton != null)
+            openRestaurantButton.SetActive(true);
+
+        if (buttonText != null)
+            buttonText.text = "Apri pizzeria";
+    }
+
+    public void RestartCurrentDayFromPause()
+    {
+        isOpen = false;
+        isShowingResult = false;
+        dayEndedWaitingForNextDay = false;
+        summaryShown = false;
+
+        if (spawnRoutine != null)
+        {
+            StopCoroutine(spawnRoutine);
+            spawnRoutine = null;
+        }
+
+        if (clockRoutine != null)
+        {
+            StopCoroutine(clockRoutine);
+            clockRoutine = null;
+        }
+
+        if (orderRevealRoutine != null)
+        {
+            StopCoroutine(orderRevealRoutine);
+            orderRevealRoutine = null;
+        }
+
+        StopPatienceTimer();
+
+        for (int i = activeCustomers.Count - 1; i >= 0; i--)
+        {
+            if (activeCustomers[i] != null)
+                Destroy(activeCustomers[i].gameObject);
+        }
+
+        activeCustomers.Clear();
+
+        currentOrder = null;
+        orderNumber = 0;
+
+        dailyServedCustomers = 0;
+        dailyPerfectPizzas = 0;
+        dailyWrongPizzas = 0;
+
+        PizzaRuntimeData.ResetPizza();
+
+        ClearReadyPizzaVisual();
+
+        if (orderBubble != null)
+            orderBubble.SetActive(false);
+
+        HideBubbleIngredient();
+
+        if (orderTicket != null)
+            orderTicket.SetActive(false);
+
+        if (clockText != null)
+            clockText.text = "12:00";
+
         if (openRestaurantButton != null)
             openRestaurantButton.SetActive(true);
 

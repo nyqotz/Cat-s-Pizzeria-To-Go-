@@ -30,6 +30,7 @@ public class ResultPanelManager : MonoBehaviour
     public float slideDuration = 0.8f;
     public float drumRollDuration = 4f;
     public float resultHoldDuration = 3f;
+    public float successResultHoldDuration = 4.8f;
     public float audioGapAfterDrumRoll = 0.15f;
 
     [Header("Slide Settings")]
@@ -138,13 +139,13 @@ public class ResultPanelManager : MonoBehaviour
         if (isCorrect)
         {
             ShowSuccess();
+            yield return new WaitForSeconds(successResultHoldDuration);
         }
         else
         {
             yield return ShowFail();
+            yield return new WaitForSeconds(resultHoldDuration);
         }
-
-        yield return new WaitForSeconds(resultHoldDuration);
 
         yield return SlideContent(
             resultContentOriginalPosition,
@@ -210,7 +211,7 @@ public class ResultPanelManager : MonoBehaviour
             customerImage.rectTransform.anchoredPosition = customerOriginalPosition;
 
         if (pizzaResultContainer != null)
-            pizzaResultContainer.anchoredPosition = pizzaContainerOriginalPosition;
+            pizzaContainerOriginalPosition = pizzaResultContainer.anchoredPosition;
 
         if (resultText != null)
             resultText.rectTransform.anchoredPosition = resultTextOriginalPosition;

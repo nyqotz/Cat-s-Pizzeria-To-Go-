@@ -9,11 +9,6 @@ public class DaySummaryPanelManager : MonoBehaviour
 
     private RestaurantManager restaurantManager;
 
-    void Start()
-    {
-        gameObject.SetActive(false);
-    }
-
     public void ShowSummary(
         int servedCustomers,
         int perfectPizzas,
@@ -23,6 +18,8 @@ public class DaySummaryPanelManager : MonoBehaviour
     {
         restaurantManager = manager;
 
+        gameObject.SetActive(true);
+
         if (servedText != null)
             servedText.text = "Clienti serviti: " + servedCustomers;
 
@@ -31,8 +28,6 @@ public class DaySummaryPanelManager : MonoBehaviour
 
         if (wrongText != null)
             wrongText.text = "Pizze sbagliate: " + wrongPizzas;
-
-        gameObject.SetActive(true);
 
         if (AudioManager.Instance != null &&
             AudioManager.Instance.musicSource != null)
