@@ -28,6 +28,7 @@ public class IngredientManager : MonoBehaviour
     private string heldIngredient = "";
     private bool sauceMode = false;
     private float sauceTimer = 0f;
+    private bool tutorialIngredientsCompleted = false;
 
     void Start()
     {
@@ -75,6 +76,8 @@ public class IngredientManager : MonoBehaviour
 
     public void ResetIngredientsForNewPizza()
     {
+        tutorialIngredientsCompleted = false;
+
         ClearHeldIngredient();
         ClearPlacedIngredients();
 
@@ -216,6 +219,8 @@ public class IngredientManager : MonoBehaviour
         dotRect.localScale = Vector3.one;
 
         PizzaRuntimeData.hasSugo = true;
+
+        CheckTutorialIngredientsCompleted();
     }
 
     void PlaceIngredient(string ingredient, Vector2 screenPosition)
@@ -258,6 +263,26 @@ public class IngredientManager : MonoBehaviour
 
         if (ingredient == "Tonno")
             PizzaRuntimeData.hasTonno = true;
+
+        CheckTutorialIngredientsCompleted();
+    }
+
+    void CheckTutorialIngredientsCompleted()
+    {
+        if (tutorialIngredientsCompleted)
+            return;
+
+        if (TutorialManager.Instance == null)
+            return;
+
+        if (!TutorialManager.Instance.IsTutorialActive())
+            return;
+
+        if (PizzaRuntimeData.hasSugo && PizzaRuntimeData.hasMozzarella)
+        {
+            tutorialIngredientsCompleted = true;
+            TutorialManager.Instance.OnIngredientsCompleted();
+        }
     }
 
     void ClearPlacedIngredients()

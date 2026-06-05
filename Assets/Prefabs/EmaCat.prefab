@@ -143,7 +143,7 @@ MonoBehaviour:
   walkRotationAmount: 6
   walkRotationSpeed: 9
   orderBubble: {fileID: 0}
-  customerAudio: {fileID: 8300000, guid: 2ce7bbab62b5e434b8a05ee6c7cc264c, type: 3}
+  customerAudio: {fileID: 8300000, guid: ac749fcedb10824419f1d86a7a4ae673, type: 3}
   backSprite: {fileID: 21300000, guid: 8756f92013e19fd4081e84854eb158bb, type: 3}
 --- !u!61 &-66211033727854863
 BoxCollider2D:

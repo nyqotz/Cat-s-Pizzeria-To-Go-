@@ -259,6 +259,9 @@ public class DoughManager : MonoBehaviour, IPointerDownHandler, IDragHandler
             rightPaw.anchoredPosition = rightPawStart;
 
         StopKneadingMusic();
+
+        if (TutorialManager.Instance != null)
+            TutorialManager.Instance.OnDoughCompleted();
     }
 
     public void ResetDoughForNewPizza()

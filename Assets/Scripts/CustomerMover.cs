@@ -176,6 +176,9 @@ public class CustomerMover : MonoBehaviour
 
         orderTaken = true;
 
+        if (TutorialManager.Instance != null)
+            TutorialManager.Instance.OnCustomerOrderTaken();
+
         if (
             AudioManager.Instance != null
             && customerAudio != null

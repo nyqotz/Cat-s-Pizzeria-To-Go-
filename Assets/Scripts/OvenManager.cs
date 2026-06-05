@@ -316,6 +316,9 @@ public class OvenManager : MonoBehaviour
         PizzaRuntimeData.pizzaReady = true;
         PizzaRuntimeData.pizzaInOven = false;
 
+        if (TutorialManager.Instance != null)
+            TutorialManager.Instance.OnOvenCompleted();
+
         RestaurantManager restaurantManager =
             FindAnyObjectByType<RestaurantManager>();
 

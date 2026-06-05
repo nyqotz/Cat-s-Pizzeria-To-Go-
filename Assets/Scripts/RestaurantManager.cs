@@ -120,6 +120,31 @@ public class RestaurantManager : MonoBehaviour
             UpdateDayText();
         }
 
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlayClick();
+
+        if (
+            TutorialManager.Instance != null &&
+            TutorialManager.Instance.ShouldDelayRestaurantOpening()
+        )
+        {
+            TutorialManager.Instance.OnOpenRestaurantPressed();
+            return;
+        }
+
+        StartRestaurantDay();
+    }
+
+    public void StartRestaurantAfterTutorialWait()
+    {
+        if (isOpen)
+            return;
+
+        StartRestaurantDay();
+    }
+
+    void StartRestaurantDay()
+    {
         isOpen = true;
         orderNumber = 0;
         lastCustomerIndex = -1;
@@ -132,8 +157,8 @@ public class RestaurantManager : MonoBehaviour
         if (clockText != null)
             clockText.text = "12:00";
 
-        if (AudioManager.Instance != null)
-            AudioManager.Instance.PlayClick();
+        if (TutorialManager.Instance != null)
+            TutorialManager.Instance.OnOpenRestaurantPressed();
 
         if (openRestaurantButton != null)
             openRestaurantButton.SetActive(false);
@@ -302,11 +327,25 @@ public class RestaurantManager : MonoBehaviour
 
         currentOrder = new PizzaOrder();
 
-        currentOrder.sugoPomodoro = Random.value > 0.5f;
-        currentOrder.mozzarella = Random.value > 0.5f;
-        currentOrder.tonno = Random.value > 0.5f;
-        currentOrder.cipolla = Random.value > 0.5f;
-        currentOrder.mediumBake = Random.value > 0.5f;
+        if (
+            TutorialManager.Instance != null &&
+            TutorialManager.Instance.ShouldUseTutorialOrder()
+        )
+        {
+            currentOrder.sugoPomodoro = true;
+            currentOrder.mozzarella = true;
+            currentOrder.tonno = false;
+            currentOrder.cipolla = false;
+            currentOrder.mediumBake = true;
+        }
+        else
+        {
+            currentOrder.sugoPomodoro = Random.value > 0.5f;
+            currentOrder.mozzarella = Random.value > 0.5f;
+            currentOrder.tonno = Random.value > 0.5f;
+            currentOrder.cipolla = Random.value > 0.5f;
+            currentOrder.mediumBake = Random.value > 0.5f;
+        }
 
         if (ticketTitle != null)
             ticketTitle.text = "ORDINE #" + orderNumber;
@@ -557,6 +596,9 @@ public class RestaurantManager : MonoBehaviour
 
         bool correct = IsPizzaCorrect();
 
+        if (TutorialManager.Instance != null)
+            TutorialManager.Instance.OnPizzaDelivered();
+
         Sprite customerSprite = GetCustomerSprite(customer);
 
         GameObject pizzaVisualForResult = readyPizzaClone;
@@ -784,35 +826,35 @@ public class RestaurantManager : MonoBehaviour
     }
 
     void TryShowDaySummaryAfterDayEnd()
-{
-    if (!dayEndedWaitingForNextDay)
-        return;
-
-    if (summaryShown)
-        return;
-
-    if (activeCustomers.Count > 0)
-        return;
-
-    summaryShown = true;
-
-    if (openRestaurantButton != null)
-        openRestaurantButton.SetActive(false);
-
-    if (daySummaryPanelManager != null)
     {
-        daySummaryPanelManager.ShowSummary(
-            dailyServedCustomers,
-            dailyPerfectPizzas,
-            dailyWrongPizzas,
-            this
-        );
+        if (!dayEndedWaitingForNextDay)
+            return;
+
+        if (summaryShown)
+            return;
+
+        if (activeCustomers.Count > 0)
+            return;
+
+        summaryShown = true;
+
+        if (openRestaurantButton != null)
+            openRestaurantButton.SetActive(false);
+
+        if (daySummaryPanelManager != null)
+        {
+            daySummaryPanelManager.ShowSummary(
+                dailyServedCustomers,
+                dailyPerfectPizzas,
+                dailyWrongPizzas,
+                this
+            );
+        }
+        else
+        {
+            ConfirmDaySummary();
+        }
     }
-    else
-    {
-        ConfirmDaySummary();
-    }
-}
 
     public void ConfirmDaySummary()
     {

@@ -10,6 +10,11 @@ public class SceneLoader : MonoBehaviour
             AudioManager.Instance.PlayClick();
         }
 
+        if (TutorialManager.Instance != null)
+        {
+            TutorialManager.Instance.OnKitchenOpened();
+        }
+
         SceneManager.LoadScene(
             "KitchenScene",
             LoadSceneMode.Additive

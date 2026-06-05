@@ -137,15 +137,21 @@ public class ResultPanelManager : MonoBehaviour
         yield return new WaitForSeconds(audioGapAfterDrumRoll);
 
         if (isCorrect)
-        {
-            ShowSuccess();
-            yield return new WaitForSeconds(successResultHoldDuration);
-        }
-        else
-        {
-            yield return ShowFail();
-            yield return new WaitForSeconds(resultHoldDuration);
-        }
+{
+    ShowSuccess();
+
+    yield return new WaitForSeconds(successResultHoldDuration);
+
+    StopResultAudio();
+}
+else
+{
+    yield return ShowFail();
+
+    yield return new WaitForSeconds(resultHoldDuration);
+
+    StopResultAudio();
+}
 
         yield return SlideContent(
             resultContentOriginalPosition,
@@ -339,18 +345,18 @@ public class ResultPanelManager : MonoBehaviour
     }
 
     void ShowSuccess()
+{
+    if (resultText != null)
+        resultText.text = "PERFETTA!";
+
+    PlayResultSFX(victoryClip);
+
+    if (thumbImage != null)
     {
-        if (resultText != null)
-            resultText.text = "PERFETTA!";
-
-        PlayResultSFX(victoryClip);
-
-        if (thumbImage != null)
-        {
-            thumbImage.gameObject.SetActive(true);
-            StartCoroutine(PopThumb());
-        }
+        thumbImage.gameObject.SetActive(true);
+        StartCoroutine(PopThumb());
     }
+}
 
     IEnumerator ShowFail()
     {
@@ -434,6 +440,17 @@ public class ResultPanelManager : MonoBehaviour
 
         resultAudioSource.Stop();
         resultAudioSource.loop = false;
+        resultAudioSource.clip = clip;
+        resultAudioSource.Play();
+    }
+
+    void PlayLoopingResultSFX(AudioClip clip)
+    {
+        if (resultAudioSource == null || clip == null)
+            return;
+
+        resultAudioSource.Stop();
+        resultAudioSource.loop = true;
         resultAudioSource.clip = clip;
         resultAudioSource.Play();
     }

@@ -1,6 +1,7 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using TMPro;
 
 public class KitchenPanelManager : MonoBehaviour
 {
@@ -12,6 +13,8 @@ public class KitchenPanelManager : MonoBehaviour
     public RectTransform ovenPanel;
 
     public OvenManager ovenManager;
+
+    public TMP_Text tutorialWarningText;
 
     public float slideDuration = 0.2f;
 
@@ -48,11 +51,17 @@ public class KitchenPanelManager : MonoBehaviour
     public void OpenDoughStation()
     {
         OpenPanelDirectly(doughPanel);
+
+        if (KitchenTutorialManager.Instance != null)
+            KitchenTutorialManager.Instance.OnDoughPanelOpened();
     }
 
     public void OpenIngredientsStation()
     {
         OpenPanelDirectly(ingredientsPanel);
+
+        if (KitchenTutorialManager.Instance != null)
+            KitchenTutorialManager.Instance.OnIngredientsPanelOpened();
     }
 
     public void OpenOvenStation()
@@ -61,6 +70,9 @@ public class KitchenPanelManager : MonoBehaviour
             ovenManager.BuildPreparedPizzaPreview();
 
         OpenPanelDirectly(ovenPanel);
+
+        if (KitchenTutorialManager.Instance != null)
+            KitchenTutorialManager.Instance.OnOvenPanelOpened();
     }
 
     void OpenPanelDirectly(RectTransform panel)
@@ -117,6 +129,9 @@ public class KitchenPanelManager : MonoBehaviour
             : -1;
 
         SlideToPanel(ingredientsPanel, direction);
+
+        if (KitchenTutorialManager.Instance != null)
+            KitchenTutorialManager.Instance.OnIngredientsPanelOpened();
     }
 
     public void ShowOvenPanel()
@@ -131,6 +146,9 @@ public class KitchenPanelManager : MonoBehaviour
         }
 
         SlideToPanel(ovenPanel, 1);
+
+        if (KitchenTutorialManager.Instance != null)
+            KitchenTutorialManager.Instance.OnOvenPanelOpened();
     }
 
     public void BackToKitchenHub()
@@ -141,6 +159,20 @@ public class KitchenPanelManager : MonoBehaviour
 
     public void BackToMainScene()
     {
+        if (
+            TutorialManager.Instance != null &&
+            TutorialManager.Instance.IsTutorialActive()
+        )
+        {
+            if (tutorialWarningText != null)
+            {
+                tutorialWarningText.text =
+                    "Completa prima il tutorial della cucina!";
+            }
+
+            return;
+        }
+
         PlayClick();
         SceneManager.UnloadSceneAsync("KitchenScene");
     }
@@ -151,9 +183,6 @@ public class KitchenPanelManager : MonoBehaviour
             return;
 
         PlayClick();
-
-        if (backToMainButton != null)
-            backToMainButton.SetActive(false);
 
         StartCoroutine(
             SlideAnimation(nextPanel, direction)
