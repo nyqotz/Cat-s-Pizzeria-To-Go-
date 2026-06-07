@@ -11,136 +11,80 @@ public class PreparedPizzaDragger : MonoBehaviour,
 
     private RectTransform rectTransform;
     private Canvas canvas;
-
     private Vector2 startAnchoredPosition;
     private bool canDrag = true;
 
-    void Start()
+    void Awake()
     {
-        rectTransform =
-            GetComponent<RectTransform>();
+        rectTransform = GetComponent<RectTransform>();
+        canvas = GetComponentInParent<Canvas>();
 
-        canvas =
-            GetComponentInParent<Canvas>();
-
-        startAnchoredPosition =
-            rectTransform.anchoredPosition;
+        if (rectTransform != null)
+            startAnchoredPosition = rectTransform.anchoredPosition;
     }
 
-    public void OnPointerDown(
-        PointerEventData eventData
-    )
+    public void OnPointerDown(PointerEventData eventData)
     {
-        if (!canDrag)
+        if (!canDrag || rectTransform == null)
             return;
 
         if (ovenManager != null)
-        {
-            ovenManager
-                .BuildPreparedPizzaPreview();
-        }
+            ovenManager.BuildPreparedPizzaPreview();
 
-        startAnchoredPosition =
-            rectTransform
-            .anchoredPosition;
+        startAnchoredPosition = rectTransform.anchoredPosition;
     }
 
-    public void OnDrag(
-        PointerEventData eventData
-    )
+    public void OnDrag(PointerEventData eventData)
     {
-        if (!canDrag)
-            return;
-
-        if (canvas == null)
+        if (!canDrag || rectTransform == null || canvas == null)
             return;
 
         rectTransform.anchoredPosition +=
-            eventData.delta
-            /
-            canvas.scaleFactor;
+            eventData.delta / canvas.scaleFactor;
     }
 
-    public void OnPointerUp(
-        PointerEventData eventData
-    )
+    public void OnPointerUp(PointerEventData eventData)
     {
-        if (!canDrag)
+        if (!canDrag || rectTransform == null)
             return;
 
-        if (
-            IsOverOven(
-                eventData.position
-            )
-        )
+        if (IsOverOven(eventData))
         {
             if (ovenManager != null)
-            {
-                ovenManager
-                    .InsertPizza();
-            }
+                ovenManager.InsertPizza();
 
             DisableDrag();
         }
         else
         {
-            rectTransform
-                .anchoredPosition =
-                    startAnchoredPosition;
+            rectTransform.anchoredPosition = startAnchoredPosition;
         }
     }
 
     public void ResetDrag()
     {
         canDrag = true;
-
         gameObject.SetActive(true);
 
         if (rectTransform != null)
-        {
-            rectTransform
-                .anchoredPosition =
-                    startAnchoredPosition;
-        }
+            rectTransform.anchoredPosition = startAnchoredPosition;
     }
 
     public void DisableDrag()
     {
         canDrag = false;
-
         gameObject.SetActive(false);
     }
 
-    bool IsOverOven(
-        Vector2 screenPosition
-    )
+    bool IsOverOven(PointerEventData eventData)
     {
         if (ovenDropArea == null)
             return false;
 
-        return RectTransformUtility
-            .RectangleContainsScreenPoint(
-                ovenDropArea,
-                screenPosition,
-                GetUICamera()
-            );
-    }
-
-    Camera GetUICamera()
-    {
-        if (canvas == null)
-            return null;
-
-        if (
-            canvas.renderMode
-            ==
-            RenderMode
-            .ScreenSpaceOverlay
-        )
-        {
-            return null;
-        }
-
-        return canvas.worldCamera;
+        return RectTransformUtility.RectangleContainsScreenPoint(
+            ovenDropArea,
+            eventData.position,
+            eventData.pressEventCamera
+        );
     }
 }

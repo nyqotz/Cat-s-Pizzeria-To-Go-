@@ -7,20 +7,22 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:625196492382:android:20894d88ec5a56ba4c76cf",
+        "mobilesdk_app_id": "1:625196492382:ios:aa7b961cb8948ed84c76cf",
         "android_client_info": {
           "package_name": "com.niccolo.catspizzeriatogo"
         }
       },
-      "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyBZGn5-Hbd1PyUi67cNCx_Os6TpqCIrup0"
+          "current_key": "AIzaSyCOwpawD0ErcF5OPsj8XMUdGFJxhMDhHFE"
         }
       ],
       "services": {
+        "analytics_service": {
+          "status": 0
+        },
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "status": 1
         }
       }
     }

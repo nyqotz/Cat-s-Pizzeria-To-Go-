@@ -24,6 +24,13 @@ public class ResultPanelManager : MonoBehaviour
     public AudioClip failClip;
     public AudioClip metalClip;
 
+    [Header("Audio Volumes")]
+    [Range(0f, 1f)]
+    public float drumRollVolume = 0.35f;
+
+    [Range(0f, 1f)]
+    public float resultSFXVolume = 1f;
+
     [Header("Timings")]
     public float fadeDuration = 3f;
     public float returnFadeDuration = 4f;
@@ -62,6 +69,7 @@ public class ResultPanelManager : MonoBehaviour
         resultAudioSource.playOnAwake = false;
         resultAudioSource.loop = false;
         resultAudioSource.spatialBlend = 0f;
+        resultAudioSource.volume = resultSFXVolume;
     }
 
     void SaveOriginalPositions()
@@ -137,21 +145,21 @@ public class ResultPanelManager : MonoBehaviour
         yield return new WaitForSeconds(audioGapAfterDrumRoll);
 
         if (isCorrect)
-{
-    ShowSuccess();
+        {
+            ShowSuccess();
 
-    yield return new WaitForSeconds(successResultHoldDuration);
+            yield return new WaitForSeconds(successResultHoldDuration);
 
-    StopResultAudio();
-}
-else
-{
-    yield return ShowFail();
+            StopResultAudio();
+        }
+        else
+        {
+            yield return ShowFail();
 
-    yield return new WaitForSeconds(resultHoldDuration);
+            yield return new WaitForSeconds(resultHoldDuration);
 
-    StopResultAudio();
-}
+            StopResultAudio();
+        }
 
         yield return SlideContent(
             resultContentOriginalPosition,
@@ -345,18 +353,18 @@ else
     }
 
     void ShowSuccess()
-{
-    if (resultText != null)
-        resultText.text = "PERFETTA!";
-
-    PlayResultSFX(victoryClip);
-
-    if (thumbImage != null)
     {
-        thumbImage.gameObject.SetActive(true);
-        StartCoroutine(PopThumb());
+        if (resultText != null)
+            resultText.text = "PERFETTA!";
+
+        PlayResultSFX(victoryClip);
+
+        if (thumbImage != null)
+        {
+            thumbImage.gameObject.SetActive(true);
+            StartCoroutine(PopThumb());
+        }
     }
-}
 
     IEnumerator ShowFail()
     {
@@ -430,6 +438,7 @@ else
         resultAudioSource.Stop();
         resultAudioSource.loop = true;
         resultAudioSource.clip = drumRollClip;
+        resultAudioSource.volume = drumRollVolume;
         resultAudioSource.Play();
     }
 
@@ -441,6 +450,7 @@ else
         resultAudioSource.Stop();
         resultAudioSource.loop = false;
         resultAudioSource.clip = clip;
+        resultAudioSource.volume = resultSFXVolume;
         resultAudioSource.Play();
     }
 
@@ -452,6 +462,7 @@ else
         resultAudioSource.Stop();
         resultAudioSource.loop = true;
         resultAudioSource.clip = clip;
+        resultAudioSource.volume = resultSFXVolume;
         resultAudioSource.Play();
     }
 

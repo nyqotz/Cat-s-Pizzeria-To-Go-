@@ -94,9 +94,8 @@ public class KitchenTutorialManager : MonoBehaviour
 
         PointArrowTo(
             doughTarget,
-            new Vector2(-160f, 0f),
-            0f
-        );
+            new Vector2(0f, -140f), 0f);
+            
     }
 
     public void OnDoughPanelOpened()

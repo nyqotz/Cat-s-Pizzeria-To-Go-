@@ -1111,10 +1111,12 @@ MonoBehaviour:
   resultText: {fileID: 1607199841}
   thumbImage: {fileID: 836663283}
   pizzaVisualSize: {x: 250, y: 250}
-  drumRollClip: {fileID: 8300000, guid: 7fd29a2df197a6e44915d054982f047e, type: 3}
+  drumRollClip: {fileID: 8300000, guid: 7a6599ffe90995846849150edd40110d, type: 3}
   victoryClip: {fileID: 8300000, guid: 37cdb888b0957b7499bf9df685f0dcc6, type: 3}
   failClip: {fileID: 8300000, guid: b6abfeff759ced5479eccfe18513e6d9, type: 3}
   metalClip: {fileID: 8300000, guid: f385b396007b753428209e9230f98cf3, type: 3}
+  drumRollVolume: 0.2
+  resultSFXVolume: 1
   fadeDuration: 2
   returnFadeDuration: 0.5
   slideDuration: 0.35
@@ -1278,7 +1280,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0}
   m_AnchorMax: {x: 0.5, y: 0}
-  m_AnchoredPosition: {x: 0, y: 343}
+  m_AnchoredPosition: {x: 0, y: 240}
   m_SizeDelta: {x: 300, y: 230}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &304181480
@@ -2422,7 +2424,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -33, y: 4}
+  m_AnchoredPosition: {x: -33, y: 4.000061}
   m_SizeDelta: {x: 250, y: 270}
   m_Pivot: {x: 1, y: 1}
 --- !u!114 &516801556
@@ -6341,8 +6343,8 @@ Transform:
   m_GameObject: {fileID: 1485171306}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalPosition: {x: -0, y: 0, z: 0}
+  m_LocalScale: {x: 1.2170222, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -8006,8 +8008,8 @@ Transform:
   m_GameObject: {fileID: 1883644232}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1.5, y: 1.5, z: 1.5}
+  m_LocalPosition: {x: -0.005, y: 0, z: 0}
+  m_LocalScale: {x: 1.8232841, y: 1.5, z: 1.5}
   m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 0}

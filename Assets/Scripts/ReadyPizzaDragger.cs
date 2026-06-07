@@ -11,7 +11,6 @@ public class ReadyPizzaDragger : MonoBehaviour,
 
     private RectTransform rectTransform;
     private Canvas canvas;
-
     private Vector2 startPosition;
     private bool canDrag = true;
 
@@ -19,7 +18,9 @@ public class ReadyPizzaDragger : MonoBehaviour,
     {
         rectTransform = GetComponent<RectTransform>();
         canvas = GetComponentInParent<Canvas>();
-        startPosition = rectTransform.anchoredPosition;
+
+        if (rectTransform != null)
+            startPosition = rectTransform.anchoredPosition;
     }
 
     public void ResetDrag()
@@ -32,7 +33,7 @@ public class ReadyPizzaDragger : MonoBehaviour,
 
     public void OnPointerDown(PointerEventData eventData)
     {
-        if (!canDrag)
+        if (!canDrag || rectTransform == null)
             return;
 
         startPosition = rectTransform.anchoredPosition;
@@ -40,7 +41,7 @@ public class ReadyPizzaDragger : MonoBehaviour,
 
     public void OnDrag(PointerEventData eventData)
     {
-        if (!canDrag || canvas == null)
+        if (!canDrag || rectTransform == null || canvas == null)
             return;
 
         rectTransform.anchoredPosition +=
@@ -49,15 +50,13 @@ public class ReadyPizzaDragger : MonoBehaviour,
 
     public void OnPointerUp(PointerEventData eventData)
     {
-        if (!canDrag)
+        if (!canDrag || rectTransform == null)
             return;
 
-        if (IsOverCustomer(eventData.position))
+        if (IsOverCustomer(eventData))
         {
             if (restaurantManager != null)
-            {
                 restaurantManager.DeliverReadyPizzaToCustomer();
-            }
 
             canDrag = false;
             return;
@@ -66,26 +65,15 @@ public class ReadyPizzaDragger : MonoBehaviour,
         rectTransform.anchoredPosition = startPosition;
     }
 
-    bool IsOverCustomer(Vector2 screenPosition)
+    bool IsOverCustomer(PointerEventData eventData)
     {
         if (customerDropArea == null)
             return false;
 
         return RectTransformUtility.RectangleContainsScreenPoint(
             customerDropArea,
-            screenPosition,
-            GetUICamera()
+            eventData.position,
+            eventData.pressEventCamera
         );
-    }
-
-    Camera GetUICamera()
-    {
-        if (canvas == null)
-            return null;
-
-        if (canvas.renderMode == RenderMode.ScreenSpaceOverlay)
-            return null;
-
-        return canvas.worldCamera;
     }
 }

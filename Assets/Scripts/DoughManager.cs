@@ -95,11 +95,12 @@ public class DoughManager : MonoBehaviour, IPointerDownHandler, IDragHandler
             kneadingMusicStarted = true;
         }
 
+        previousDirection = GetDirectionFromDoughCenter(eventData);
+
         if (tapCount < requiredTaps)
         {
             tapCount++;
             AnimatePawTap();
-            previousDirection = Vector2.zero;
         }
     }
 
@@ -120,7 +121,7 @@ public class DoughManager : MonoBehaviour, IPointerDownHandler, IDragHandler
         AnimatePawCircle(eventData.delta);
 
         Vector2 currentDirection =
-            (eventData.position - eventData.pressPosition).normalized;
+            GetDirectionFromDoughCenter(eventData);
 
         if (currentDirection == Vector2.zero)
             return;
@@ -128,7 +129,16 @@ public class DoughManager : MonoBehaviour, IPointerDownHandler, IDragHandler
         if (previousDirection != Vector2.zero)
         {
             float angle =
-                Vector2.SignedAngle(previousDirection, currentDirection);
+                Vector2.SignedAngle(
+                    previousDirection,
+                    currentDirection
+                );
+
+            if (Mathf.Abs(angle) < 2f)
+            {
+                previousDirection = currentDirection;
+                return;
+            }
 
             accumulatedRotation += Mathf.Abs(angle);
 
@@ -147,6 +157,36 @@ public class DoughManager : MonoBehaviour, IPointerDownHandler, IDragHandler
         }
 
         previousDirection = currentDirection;
+    }
+
+    Vector2 GetDirectionFromDoughCenter(PointerEventData eventData)
+    {
+        if (doughImage == null)
+            return Vector2.zero;
+
+        RectTransform doughRect =
+            doughImage.rectTransform;
+
+        Camera uiCamera =
+            eventData.pressEventCamera;
+
+        Vector2 localPoint;
+
+        bool converted =
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                doughRect,
+                eventData.position,
+                uiCamera,
+                out localPoint
+            );
+
+        if (!converted)
+            return Vector2.zero;
+
+        if (localPoint.sqrMagnitude < 25f)
+            return Vector2.zero;
+
+        return localPoint.normalized;
     }
 
     void AnimatePawTap()
@@ -187,7 +227,10 @@ public class DoughManager : MonoBehaviour, IPointerDownHandler, IDragHandler
         }
     }
 
-    System.Collections.IEnumerator PawPressAnimation(RectTransform paw, Vector2 start)
+    System.Collections.IEnumerator PawPressAnimation(
+        RectTransform paw,
+        Vector2 start
+    )
     {
         Vector2 down =
             start + new Vector2(0f, -pawPressDistance);
@@ -199,7 +242,11 @@ public class DoughManager : MonoBehaviour, IPointerDownHandler, IDragHandler
             time += Time.deltaTime;
 
             float t =
-                Mathf.SmoothStep(0f, 1f, time / pawPressDuration);
+                Mathf.SmoothStep(
+                    0f,
+                    1f,
+                    time / pawPressDuration
+                );
 
             paw.anchoredPosition =
                 Vector2.Lerp(start, down, t);
@@ -214,7 +261,11 @@ public class DoughManager : MonoBehaviour, IPointerDownHandler, IDragHandler
             time += Time.deltaTime;
 
             float t =
-                Mathf.SmoothStep(0f, 1f, time / pawReturnDuration);
+                Mathf.SmoothStep(
+                    0f,
+                    1f,
+                    time / pawReturnDuration
+                );
 
             paw.anchoredPosition =
                 Vector2.Lerp(down, start, t);

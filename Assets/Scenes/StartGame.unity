@@ -1425,8 +1425,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 0.0015258789}
-  m_SizeDelta: {x: -336.49, y: -258.02}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &927576892
 MonoBehaviour:
@@ -2369,7 +2369,7 @@ AudioSource:
   m_GameObject: {fileID: 1659568960}
   m_Enabled: 1
   serializedVersion: 4
-  OutputAudioMixerGroup: {fileID: 0}
+  OutputAudioMixerGroup: {fileID: 2049335476388064504, guid: 6da6c8da441ecbd4098ac8f25c0425f6, type: 2}
   m_audioClip: {fileID: 0}
   m_Resource: {fileID: 0}
   m_PlayOnAwake: 0
@@ -2466,7 +2466,7 @@ AudioSource:
   m_GameObject: {fileID: 1659568960}
   m_Enabled: 1
   serializedVersion: 4
-  OutputAudioMixerGroup: {fileID: 0}
+  OutputAudioMixerGroup: {fileID: -4576117807913516712, guid: 6da6c8da441ecbd4098ac8f25c0425f6, type: 2}
   m_audioClip: {fileID: 0}
   m_Resource: {fileID: 8300000, guid: 7586b72fded55ea4087034fc089349ee, type: 3}
   m_PlayOnAwake: 1
@@ -2568,12 +2568,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::AudioManager
   musicSource: {fileID: 1659568962}
   sfxSource: {fileID: 1659568961}
-  menuMusic: {fileID: 8300000, guid: 6d176bc05abf74b4a905ffd3fcf452b8, type: 3}
+  menuMusic: {fileID: 8300000, guid: 1decf97a3da59154eb7c21bd2ef079b8, type: 3}
   gameplayMusic: {fileID: 8300000, guid: 7586b72fded55ea4087034fc089349ee, type: 3}
   clickSound: {fileID: 8300000, guid: c377226350c87e440991364d5f699b5f, type: 3}
   shutterSound: {fileID: 8300000, guid: 3a8a12dbd53c4e9448083b6d13889d27, type: 3}
-  globalSFXMultiplier: 1.5
-  buttonClickMultiplier: 2.5
+  globalSFXMultiplier: 1
+  buttonClickMultiplier: 1
   shutterMultiplier: 1
 --- !u!4 &1659568964
 Transform:
