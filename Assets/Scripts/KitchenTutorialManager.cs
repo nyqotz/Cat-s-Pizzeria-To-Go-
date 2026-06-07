@@ -84,19 +84,20 @@ public class KitchenTutorialManager : MonoBehaviour
         }
     }
 
-    void ShowDoughStep()
-    {
-        ShowText(
-            "Clicca sull'impasto e completalo con 10 tap e 2 movimenti circolari."
-        );
+   void ShowDoughStep()
+{
+    ShowText(
+        "Clicca sull'impasto e completalo con 10 tap e 2 movimenti circolari."
+    );
 
-        ShowNextButton(false);
+    ShowNextButton(false);
 
-        PointArrowTo(
-            doughTarget,
-            new Vector2(0f, -140f), 0f);
-            
-    }
+    PointArrowTo(
+        doughTarget,
+        new Vector2(-95f, -140f),
+        90f
+    );
+}
 
     public void OnDoughPanelOpened()
     {
