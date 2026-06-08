@@ -6,7 +6,7 @@
 
 
 
-Cat's Pizzeria To Go! è un videogioco gestionale per dispositivi mobili sviluppato con Unity come progetto per il corso di Mobile Computing dell'Università Roma Tre.
+Cat's Pizzeria To Go! è un videogioco gestionale per dispositivi mobili sviluppato con Unity.
 
 
 
